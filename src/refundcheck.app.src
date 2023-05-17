@@ -1,0 +1,23 @@
+{application, refundcheck,
+    [
+        {description, "Refund Check"},
+        {vsn, "0.1.0"},
+        {registered, []},
+        {mod, {refundcheck_app, []}},
+        {applications,
+            [
+                kernel,
+                stdlib,
+                cowboy,
+                epgsql
+                % pgapp
+            ]
+        },
+        % {included_applications, [pooler]},  %% https://github.com/epgsql/pooler#pooler-as-an-included-application
+        {env,[]},
+        {modules, []},
+
+        {licenses, ["Apache 2.0"]},
+        {links, []}
+    ]
+}.
