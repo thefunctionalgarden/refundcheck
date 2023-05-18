@@ -79,12 +79,12 @@ getCustomerInfo(CustomerMail) ->
     Purchases = selectPurchasesByCustomer(Conn, CustomerId),
     
     % get refunds history
-    selectRefundsByPurchases(Conn, Purchases),
+    Refunds = selectRefundsByPurchases(Conn, Purchases),
 
-    % consolidated refunds info
+    % consolidate refunds info
     % TODO
-
-    Purchases.
+    Info = consolidateRefundInfo(Purchases, Refunds),
+    Info.
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -236,6 +236,36 @@ insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription) ->
             VALUES ($1, $2, $3, $4)",
         [SellerId, PurchaseTrxId, RefundTypeId, RefundDescription]
     ).
+
+
+consolidateRefundInfo(Purchases, Refunds) ->
+    PurchasesNum = length(Purchases),
+    RefundsNum   = length(Refunds),
+    RefundsP     = (100 * RefundsNum) div PurchasesNum,
+    Description  = getRefundInfoDescription(PurchasesNum, RefundsP),
+    #{
+        description   => Description,
+        purchases_num => PurchasesNum,
+        refunds_num   => RefundsNum,
+        refunds_p     => RefundsP
+    }.
+
+
+
+getRefundInfoDescription(0, 0) ->
+    "no data for this customer";
+getRefundInfoDescription(PurchasesNum, 0) when PurchasesNum < 3 ->
+    "very few data for the customer, but looking good";
+getRefundInfoDescription(_, 0) ->
+    "customer looking great";
+getRefundInfoDescription(_, RefundsP) when RefundsP < 30 ->
+    "customer has some refunds, looking fair";
+getRefundInfoDescription(_, RefundsP) when RefundsP < 51 ->
+    "customer looks suspicious";
+getRefundInfoDescription(_, _) ->
+    "customer looks abusive".
+
+
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
