@@ -8,7 +8,8 @@
     getColValues/2,
     registerPurchase/1,
     registerRefund/1,
-    getCustomerHistory/1
+    getCustomerHistory/2,
+    getCustomerHistoryGlobal/1
 ]).
 
 -compile([export_all]).
@@ -98,22 +99,40 @@ registerRefund(RefundData) ->
             }
     end,
     R.
+
     
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
 
 getCustomerHistory(SellerId, CustomerMail) ->
-
     Conn = getConnection(),
 
-    % get customer
     CustomerIds = selectCustomerIds(Conn, CustomerMail),
-    CustomerId = case CustomerIds of
-        [] ->
-            insertCustomer(Conn, CustomerMail),
-            [NewCId] = selectCustomerIds(Conn, CustomerMail),
-            NewCId;
-        [CId] -> CId
-    end,
+    Res = getCustomerHistoryInternal(Conn, SellerId, CustomerIds),
 
+    ok = epgsql:close(Conn),
+    Res.
+
+
+getCustomerHistoryGlobal(CustomerMail) ->
+    Conn = getConnection(),
+
+    CustomerIds = selectCustomerIds(Conn, CustomerMail),
+    Res = getCustomerHistoryInternal(Conn, [], CustomerIds),
+
+    ok = epgsql:close(Conn),
+    Res.
+
+
+getCustomerHistoryInternal(_Conn, _SellerId, []) ->
+    #{
+        result        => <<"error">>,
+        description   => <<"no data for this customer">>,
+        purchases_num => 0,
+        refunds_num   => 0,
+        refunds_p     => 0
+    };
+getCustomerHistoryInternal(Conn, SellerId, [CustomerId]) ->
     % get customer's purchases history
     Purchases = selectPurchasesByCustomerAndSeller(Conn, CustomerId, SellerId),
     
@@ -121,35 +140,9 @@ getCustomerHistory(SellerId, CustomerMail) ->
     Refunds = selectRefundsByPurchases(Conn, Purchases),
 
     % consolidate refunds info
-    % TODO
-    Info = consolidateRefundInfo(Purchases, Refunds),
-    Info.
-
-
-getCustomerHistory(CustomerMail) ->
-
-    Conn = getConnection(),
-
-    % get customer
-    CustomerIds = selectCustomerIds(Conn, CustomerMail),
-    CustomerId = case CustomerIds of
-        [] ->
-            insertCustomer(Conn, CustomerMail),
-            [NewCId] = selectCustomerIds(Conn, CustomerMail),
-            NewCId;
-        [CId] -> CId
-    end,
-
-    % get customer's purchases history
-    Purchases = selectPurchasesByCustomer(Conn, CustomerId),
-    
-    % get refunds history
-    Refunds = selectRefundsByPurchases(Conn, Purchases),
-
-    % consolidate refunds info
-    % TODO
-    Info = consolidateRefundInfo(Purchases, Refunds),
-    Info.
+    % TODO expandir la info: datos recientes
+    Res = consolidateRefundInfo(Purchases, Refunds),
+    Res.
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -251,7 +244,7 @@ deletePurchase(Conn, SellerId, CustomerId) ->
         [SellerId, CustomerId]
     ).
 
-selectPurchasesByCustomer(Conn, CustomerId) ->
+selectPurchasesByCustomerAndSeller(Conn, CustomerId, []) ->
     RS = epgsql:equery(Conn,
         "SELECT date, seller_id, customer_id, product_type_id, 
             amount_range_id, amount_currency, transaction_id
@@ -259,9 +252,7 @@ selectPurchasesByCustomer(Conn, CustomerId) ->
         [CustomerId]
     ),
     R = parse_result(RS),
-    R.
-
-
+    R;
 selectPurchasesByCustomerAndSeller(Conn, CustomerId, SellerId) ->
     RS = epgsql:equery(Conn,
         "SELECT date, seller_id, customer_id, product_type_id, 
@@ -316,12 +307,23 @@ insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription) ->
     ).
 
 
+consolidateRefundInfo([], Refunds) ->
+    RefundsNum   = length(Refunds),
+    Description  = getRefundInfoDescription(0, 0),
+    #{
+        result        => <<"ok">>,
+        description   => Description,
+        purchases_num => 0,
+        refunds_num   => RefundsNum,
+        refunds_p     => 0
+    };
 consolidateRefundInfo(Purchases, Refunds) ->
     PurchasesNum = length(Purchases),
     RefundsNum   = length(Refunds),
     RefundsP     = (100 * RefundsNum) div PurchasesNum,
     Description  = getRefundInfoDescription(PurchasesNum, RefundsP),
     #{
+        result        => <<"ok">>,
         description   => Description,
         purchases_num => PurchasesNum,
         refunds_num   => RefundsNum,
@@ -331,17 +333,17 @@ consolidateRefundInfo(Purchases, Refunds) ->
 
 
 getRefundInfoDescription(0, 0) ->
-    "no data for this customer";
+    <<"no data for this customer">>;
 getRefundInfoDescription(PurchasesNum, 0) when PurchasesNum < 3 ->
-    "very few data for the customer, but looking good";
+    <<"very few data for the customer, but looking good">>;
 getRefundInfoDescription(_, 0) ->
-    "customer looking great";
+    <<"customer looking great">>;
 getRefundInfoDescription(_, RefundsP) when RefundsP < 30 ->
-    "customer has some refunds, looking fair";
+    <<"customer has some refunds, looking fair">>;
 getRefundInfoDescription(_, RefundsP) when RefundsP < 51 ->
-    "customer looks suspicious";
+    <<"customer looks suspicious">>;
 getRefundInfoDescription(_, _) ->
-    "customer looks abusive".
+    <<"customer looks abusive">>.
 
 
 

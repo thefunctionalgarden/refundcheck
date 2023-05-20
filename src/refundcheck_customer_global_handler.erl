@@ -1,4 +1,4 @@
--module(refundcheck_customer_handler).
+-module(refundcheck_customer_global_handler).
 
 -behavior(cowboy_handler).
 
@@ -69,8 +69,7 @@ to_json(Req0, State) ->
     io:format("ApiVersion:~p~n", [ApiVersion]),
     io:format("CustomerMail:~p~n", [CustomerMail]),
 
-    SellerId = 2,  %TODO get SellerId del usuario autenticado
-    RespBody = processData(SellerId, CustomerMail),
+    RespBody = processData(CustomerMail),
     RespBodyEnc = jsx:encode(RespBody),
     HTTPRespStatus = case RespBody of
         #{result := <<"ok">>}    -> 200;
@@ -88,8 +87,8 @@ to_json(Req0, State) ->
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-processData(SellerId, Data) ->
-    RespBody = refundcheck:getCustomerHistory(SellerId, Data),
+processData(Data) ->
+    RespBody = refundcheck:getCustomerHistoryGlobal(Data),
     RespBody.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
