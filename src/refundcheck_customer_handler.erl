@@ -2,6 +2,8 @@
 
 -behavior(cowboy_handler).
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([
     init/2,
     allowed_methods/2,
@@ -59,8 +61,10 @@ content_types_provided(Req, State) ->
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
 to_json(Req0, State) ->
+    io:format("MMMMMMMMMMMMMMMMM~n"),
+    ?LOG_INFO("starting processing"),
     QsValsEnc = cowboy_req:parse_qs(Req0),
-    QsVals = jsx:decode(QsValsEnc, [return_maps]),
+    QsVals = jsx:decode(QsValsEnc, [return_maps, {labels, atom}]),
 
     RespBody = processData(QsVals),
     
@@ -72,7 +76,7 @@ to_json(Req0, State) ->
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 processData(Data) ->
-    RespBody = refundcheck:getCustomerInfo(Data),
+    RespBody = refundcheck:getCustomerHistory(Data),
     RespBody.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

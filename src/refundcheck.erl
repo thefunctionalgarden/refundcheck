@@ -8,7 +8,7 @@
     getColValues/2,
     registerPurchase/1,
     registerRefund/1,
-    getCustomerInfo/1
+    getCustomerHistory/1
 ]).
 
 -compile([export_all]).
@@ -18,7 +18,7 @@
 
 registerPurchase(PurchaseData) ->
 
-    % validatePurchaseData(PurchaseData)
+    %TODO validatePurchaseData(PurchaseData)
 
     #{
         seller_mail     := SellerMail,
@@ -30,6 +30,7 @@ registerPurchase(PurchaseData) ->
         amount_currency := AmountCurrency
     } = PurchaseData,
 
+    io:format("PurchaseData:~p~n", [PurchaseData]),
     Conn = getConnection(),
 
     [SellerId] = selectSellerIds(Conn, SellerMail),
@@ -42,26 +43,90 @@ registerPurchase(PurchaseData) ->
             NewCId;
         [CId] -> CId
     end,
+    io:format("CustomerId:~p~n", [CustomerId]),
 
     % insertPurchase(Conn, SellerId, CustomerId, ProductTypeId, Date, AmountRangeId, AmountCurrency, TransactionId),
-    insertPurchase(Conn, SellerId, CustomerId, ProductTypeId, AmountRangeId, AmountCurrency, TransactionId),
-    ok = epgsql:close(Conn).
+    Res = insertPurchase(Conn, SellerId, CustomerId, ProductTypeId, AmountRangeId, AmountCurrency, TransactionId),
+    io:format("Insert Res:~p~n", [Res]),
+    ok = epgsql:close(Conn),
+      
+    R = case Res of
+        {error,{error,error,_ErrorCode,unique_violation, _InternalDesc, _ErrorDetail}} ->
+            #{
+                result => <<"error">>,
+                description => <<"transaction id already registered">>
+            };
+        {ok, 1} ->            
+            #{
+                result => <<"ok">>,
+                description => <<"purchase has been registered">>
+            };
+        _ ->
+            #{
+                result => <<"error">>,
+                description => <<"unknown">>
+            }
+    end,
+    R.
     
 
 registerRefund(RefundData) ->
     #{
-        seller_id   := SellerId,
-        purchase_transaction_id := PurchaseTrxId,
-        type_id     := RefundTypeId,
-        description := RefundDescription
+        seller_mail := SellerMail,
+        purchase_trx_id := PurchaseTrxId,
+        refund_type := RefundTypeId,
+        extra_info := RefundDescription
     } = RefundData,
     
     Conn = getConnection(),
-    insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription),
-    ok = epgsql:close(Conn).
+
+    [SellerId] = selectSellerIds(Conn, SellerMail),
+    Res = insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription),
+    io:format("Insert Res:~p~n", [Res]),
+    ok = epgsql:close(Conn),
+      
+    R = case Res of
+        {ok, 1} ->            
+            #{
+                result => <<"ok">>,
+                description => <<"refund has been registered">>
+            };
+        _ ->
+            #{
+                result => <<"error">>,
+                description => <<"unknown">>
+            }
+    end,
+    R.
     
 
-getCustomerInfo(CustomerMail) ->
+getCustomerHistory(SellerId, CustomerMail) ->
+
+    Conn = getConnection(),
+
+    % get customer
+    CustomerIds = selectCustomerIds(Conn, CustomerMail),
+    CustomerId = case CustomerIds of
+        [] ->
+            insertCustomer(Conn, CustomerMail),
+            [NewCId] = selectCustomerIds(Conn, CustomerMail),
+            NewCId;
+        [CId] -> CId
+    end,
+
+    % get customer's purchases history
+    Purchases = selectPurchasesByCustomerAndSeller(Conn, CustomerId, SellerId),
+    
+    % get refunds history
+    Refunds = selectRefundsByPurchases(Conn, Purchases),
+
+    % consolidate refunds info
+    % TODO
+    Info = consolidateRefundInfo(Purchases, Refunds),
+    Info.
+
+
+getCustomerHistory(CustomerMail) ->
 
     Conn = getConnection(),
 
@@ -192,6 +257,19 @@ selectPurchasesByCustomer(Conn, CustomerId) ->
             amount_range_id, amount_currency, transaction_id
         FROM refundcheck.purchase p WHERE p.customer_id = $1",
         [CustomerId]
+    ),
+    R = parse_result(RS),
+    R.
+
+
+selectPurchasesByCustomerAndSeller(Conn, CustomerId, SellerId) ->
+    RS = epgsql:equery(Conn,
+        "SELECT date, seller_id, customer_id, product_type_id, 
+            amount_range_id, amount_currency, transaction_id
+        FROM refundcheck.purchase p
+        WHERE p.customer_id = $1
+        AND   p.seller_id = $2",
+        [CustomerId, SellerId]
     ),
     R = parse_result(RS),
     R.

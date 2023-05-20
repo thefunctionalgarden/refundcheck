@@ -2,6 +2,8 @@
 
 -behavior(cowboy_handler).
 
+-include_lib("kernel/include/logger.hrl").
+
 -export([
     init/2,
     allowed_methods/2,
@@ -48,11 +50,26 @@ content_types_accepted(Req, State) ->
 %%               | {see_other, URI :: iodata()}
 %%               | false
 from_json(Req0, State) ->
+    ?LOG_INFO("starting refund reg"),
+
+    ApiVersion = cowboy_req:binding(api_version, Req0, <<"v1">>),
+    io:format("ApiVersion:~p~n", [ApiVersion]),
+
     {ok, OrgBodyEnc, Req1} = cowboy_req:read_body(Req0),
-    OrgBody = jsx:decode(OrgBodyEnc, [return_maps]),
+    OrgBody = jsx:decode(OrgBodyEnc, [return_maps, {labels, atom}]),
     RespBody = processData(OrgBody),
     RespBodyEnc = jsx:encode(RespBody),
-    ReqN = cowboy_req:set_resp_body(RespBodyEnc, Req1),
+    HTTPRespStatus = case RespBody of
+        #{result := <<"ok">>}    -> 200;
+        #{result := <<"error">>} -> 400;
+        _Other -> 500
+    end,
+    ReqN = cowboy_req:reply(
+        HTTPRespStatus, 
+        #{ <<"content-type">> => <<"application/json">> },
+        RespBodyEnc,
+        Req1
+    ),
     {stop, ReqN, State}.  %%  {Result, Req, State}
 
 
