@@ -24,10 +24,17 @@ start(_StartType, _StartArgs) ->
         }
     ],
     Dispatch = cowboy_router:compile(Routes),
-    {ok, _} = cowboy:start_clear(refundcheck_http_listener,
-        [{port, 2020}],
+    HTTPPort = refundcheck_config:getHTTPPort(),
+    {ok, _} = cowboy:start_clear(
+        refundcheck_http_listener,
+        [{port, HTTPPort}],
         #{env => #{dispatch => Dispatch}}
-        ),
+    ),
+    % {ok, _} = cowboy:start_tls(
+    %     refundcheck_https_listener,
+    %     [{port, 2023}],
+    %     #{env => #{dispatch => Dispatch}}
+    % ),
 
     refundcheck_sup:start_link().
 

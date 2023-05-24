@@ -1,6 +1,7 @@
 -module(refundcheck).
 
 -include_lib("epgsql/include/epgsql.hrl").
+-include_lib("kernel/include/logger.hrl").
 
 % -feature(maybe_expr, enable). 
 
@@ -148,9 +149,13 @@ getCustomerHistoryInternal(Conn, SellerId, [CustomerId]) ->
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 getConnection() ->
-    Host = "localhost",
-    Username = "cam",
-    Password = "Casteril0!",  %TODO  ### WARNING!!  use anon fun insted of plain text for the pass
+    Host     = refundcheck_config:getDBHost(),
+    Username = refundcheck_config:getDBUser(), 
+    Password = refundcheck_config:getDBPass(), %TODO  ### WARNING!!  use anon fun insted of plain text for the pass
+    
+    io:format("db_host:~p~n", [Host]),
+    io:format("db_user:~p~n", [Username]),
+    
     {ok, Conn} = epgsql:connect(Host, Username, Password, []),
     Conn.
 
