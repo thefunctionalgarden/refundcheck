@@ -1,0 +1,37 @@
+%% -*- mode: erlang -*-
+[
+    {kernel, [
+        {logger, [
+            {
+                handler, 
+                default, 
+                logger_std_h,
+                #{
+                    level => info,
+                    config => #{
+                        file => "log/info.log"
+                    }
+                }
+            }
+        ]}
+    ]},
+
+    {refundcheck, [
+        {db_host, "db-pg-1.c88fu9ryczuk.us-east-1.rds.amazonaws.com"},
+        {db_user, "refundcheck_u"},
+        {db_pass, "IUN878nc,.>/c7B*"},
+        {http_port, "2020"},
+        {routes, 
+    [
+        {"api.sellersguard.com",[
+            {"/:api_version/customer/global/:customer_mail",  refundcheck_customer_global_handler, []},
+            {"/:api_version/customer/:customer_mail",         refundcheck_customer_handler, []},
+            {"/:api_version/purchase", refundcheck_purchase_handler, []},
+            {"/:api_version/refund",   refundcheck_refund_handler,   []}
+            ]
+        }
+    ]
+        }
+    ]}
+].
+

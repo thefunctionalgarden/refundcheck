@@ -14,15 +14,7 @@ start(_StartType, _StartArgs) ->
     % start for epgsql
      {ok, _} = application:ensure_all_started(epgsql),
 
-    Routes = [
-        {'_',[
-            {"/refund_check/:api_version/customer/global/:customer_mail",  refundcheck_customer_global_handler, []},
-            {"/refund_check/:api_version/customer/:customer_mail",         refundcheck_customer_handler, []},
-            {"/refund_check/:api_version/purchase", refundcheck_purchase_handler, []},
-            {"/refund_check/:api_version/refund",   refundcheck_refund_handler,   []}
-            ]
-        }
-    ],
+    Routes   = refundcheck_config:getRoutes(),
     Dispatch = cowboy_router:compile(Routes),
     HTTPPort = refundcheck_config:getHTTPPort(),
     {ok, _} = cowboy:start_clear(
@@ -30,15 +22,21 @@ start(_StartType, _StartArgs) ->
         [{port, HTTPPort}],
         #{env => #{dispatch => Dispatch}}
     ),
-    % {ok, _} = cowboy:start_tls(
-    %     refundcheck_https_listener,
-    %     [{port, 2023}],
+
+    % {ok, _} = cowboy:start_tls(refundcheck_https_listener,
+    %     [
+    %         {port, HTTPPort},
+    %         {certfile, "/path/to/certfile"},
+    %         {keyfile, "/path/to/keyfile"}
+    %     ],
     %     #{env => #{dispatch => Dispatch}}
     % ),
 
     refundcheck_sup:start_link().
 
 stop(_State) ->
+    % ok = cowboy:stop_listener(refundcheck_https_listener),
+    ok = cowboy:stop_listener(refundcheck_http_listener),
     ok.
 
 %% internal functions

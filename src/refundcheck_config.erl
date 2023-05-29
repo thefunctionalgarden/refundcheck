@@ -4,6 +4,7 @@
     getDBHost/0,
     getDBUser/0,
     getDBPass/0,
+    getRoutes/0,
     getHTTPPort/0
 ]).
 
@@ -17,6 +18,10 @@ getDBUser() ->
 
 getDBPass() ->
     V = application:get_env(refundcheck, db_pass, undefined),
+    V.
+
+getRoutes() ->
+    V = application:get_env(refundcheck, routes, undefined),
     V.
 
 getHTTPPort() ->
