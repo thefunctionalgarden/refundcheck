@@ -20,7 +20,12 @@ start(_StartType, _StartArgs) ->
     {ok, _} = cowboy:start_clear(
         refundcheck_http_listener,
         [{port, HTTPPort}],
-        #{env => #{dispatch => Dispatch}}
+        #{
+            env => #{dispatch => Dispatch},
+            protocol_options => [
+                {versions, ['HTTP/1.1', 'HTTP/2']}
+            ]
+        }
     ),
 
     % {ok, _} = cowboy:start_tls(refundcheck_https_listener,

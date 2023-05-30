@@ -61,6 +61,8 @@ content_types_provided(Req, State) ->
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
 to_json(Req0, State) ->
+    UnknownHost = cowboy_req:binding(unknownhost, Req0, <<"">>),
+    io:format("healthcheck from host: ~p~n", [UnknownHost]),
     RespBodyEnc = <<"">>,
     ReqN = cowboy_req:reply(
         200, 
