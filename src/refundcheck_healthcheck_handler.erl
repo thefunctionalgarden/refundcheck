@@ -23,10 +23,10 @@ init(Req0, State) ->
 allowed_methods(Req0, State) ->
     Req = cowboy_req:set_resp_headers(#{
         <<"Access-Control-Allow-Origin">> => <<"*">>,
-        <<"Access-Control-Allow-Methods">> => <<"GET">>,
+        <<"Access-Control-Allow-Methods">> => <<"GET, HEAD">>,
         <<"Access-Control-Allow-Headers">> => <<"Content-Type">>
     }, Req0),
-    {[<<"GET">>, <<"OPTIONS">>], Req, State}.
+    {[<<"GET">>, <<"HEAD">>, <<"OPTIONS">>], Req, State}.
 
 % content_types_accepted(Req, State) ->
 %     %%  define AcceptCallback callback for PUT, POST, PATCH
