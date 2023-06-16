@@ -20,6 +20,9 @@ init(Req0, State) ->
     {cowboy_rest, Req0, State}.
 
 
+% valid_content_headers(Req, State) ->
+%     {true, Req, State}.
+
 allowed_methods(Req0, State) ->
     Req = cowboy_req:set_resp_headers(#{
         <<"Access-Control-Allow-Origin">> => <<"*">>,
@@ -61,8 +64,10 @@ content_types_provided(Req, State) ->
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
 to_json(Req0, State) ->
-    UnknownHost = cowboy_req:binding(unknownhost, Req0, <<"">>),
-    io:format("healthcheck from host: ~p~n", [UnknownHost]),
+    % Host = cowboy_req:binding(unknownhost, Req0, <<"">>),
+    HostTokens = cowboy_req:host_info(Req0),
+    io:format("healthcheck from host: ~p~n", [HostTokens]),
+
     RespBodyEnc = <<"">>,
     ReqN = cowboy_req:reply(
         200, 
