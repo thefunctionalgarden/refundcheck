@@ -1,8 +1,9 @@
--module(refundcheck_healthcheck_handler).
+-module(refundcheck_static_handler).
 
 -behavior(cowboy_handler).
 
 % -include_lib("kernel/include/logger.hrl").
+-include_lib("kernel/include/file.hrl").
 
 -export([
     init/2,
@@ -12,7 +13,7 @@
 ]).
 -export([
     % from_json/2
-    to_json/2
+    to_send/2
 ]).
 
 
@@ -41,7 +42,7 @@ allowed_methods(Req0, State) ->
 content_types_provided(Req, State) ->
     %%  define ProvideResource callback (ProvideCallback) for GET, HEAD
     Handler = [
-        {<<"application/json">>, to_json}
+        {<<"text/html">>, to_send}
     ],
     {Handler, Req, State}.
 
@@ -63,18 +64,31 @@ content_types_provided(Req, State) ->
 
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
-to_json(Req0, State) ->
-    % HostTokens = cowboy_req:host_info(Req0),
-    % io:format("healthcheck from host: ~p~n", [HostTokens]),
+to_send(Req0, State) ->
+    HostTokens = cowboy_req:host_info(Req0),
+    io:format("request from host: ~p~n", [HostTokens]),
 
-    RespBodyEnc = <<"">>,
+    Path = cowboy_req:path(Req0),
+    io:format("requested path: ~p~n", [Path]),
+
+    Filename = case Path of
+        <<"/">>             -> <<"public/index.html">>;
+        <<"/index.html">>   -> <<"public/index.html">>;
+        <<"/privacy.html">> -> <<"public/privacy.html">>;
+        _OtherPath -> <<"public/index.html">>
+    end,
+    
+    {ok, #file_info{size = Size}} = file:read_file_info(Filename),
+    Req1 = cowboy_req:set_resp_body({sendfile, 0, Size, Filename}, Req0),
     ReqN = cowboy_req:reply(
-        200, 
-        #{ <<"content-type">> => <<"application/json">> },
-        RespBodyEnc,
-        Req0
+        200,
+        #{ <<"content-type">> => <<"text/html">> },
+        Req1
     ),
+
     {stop, ReqN, State}.  %%  {Result, Req, State}
+
+    
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
