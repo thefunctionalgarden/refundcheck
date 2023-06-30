@@ -2,87 +2,108 @@
 <html>
 
 <head>
-    <title>SellersGuard - Prevent refund abuse</title>
+    <title>SellersGuard</title>
+    <meta name="description" content="Prevent refund abuse" />
+    <meta charSet="utf-8" />
+    <link rel="canonical" href="https://sellersguard.com" />
     <link href="css/sellersguard.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900 py-4 px-20 flex items-center justify-between rounded-lg">
+<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-4 sm:py-5  px-4 sm:px-8  flex items-center justify-between rounded-lg">
     <div>
-        <h1 class="text-5xl mx-auto font-bold mb-1 ">SellersGuard</h1>
-        <p class="text-3xl mx-auto ">Prevent Refund Abuse</p>
+        <p class="text-3xl sm:text-4xl font-bold">SellersGuard</p>
+        <p class="text-lg  sm:text-xl   font-bold text-gray-800">Prevent Refund Abuse</p>
     </div>
     <div>
-        <a href="#how-it-works" class="text-gray-600 mx-4">How It Works</a>
-        <a href="#prices" class="text-gray-600">Prices</a>
+        <a class="text-xs sm:text-base text-gray-600 px-1 sm:px-4" href="#how-it-works">How It Works</a>
+        <a class="text-xs sm:text-base text-gray-600" href="#prices">Prices</a>
     </div>
 </header>
 
-<body class="bg-gray-100 text-gray-900 px-20">
-    <div class="container mx-auto py-8">
-        <h1 class="text-5xl font-bold mb-1 text-center">SellersGuard</h1>
-        <p class="text-3xl mb-6 text-center">Prevent Refund Abuse</p>
+<body class="bg-gray-100 text-gray-900 px-6">
+    <div id="intro" class="container mx-auto py-8   text-lg">
+        <br><br><br>
 
-        <p class="text-lg mb-4">Don't let refund abuse jeopardize your business - Sellers Guard empowers you to sell with
+        <p class="mb-8">Don't let refund abuse jeopardize your business - Sellers Guard empowers you to sell with
             confidence and peace of mind.</p>
 
-        <p class="text-lg mb-4">Benefit from the collective record of fellow sellers while maintaining utmost privacy -
+        <p class="mb-8">Benefit from the collective record of fellow sellers while maintaining utmost privacy -
             we leverage the experiences of a trusted network to identify potential refund abusers.</p>
 
-        <p class="text-lg mb-8">Protect your business from refund abusers with Sellers Guard, your ultimate defense
+        <p class="mb-8">Protect your business from refund abusers with Sellers Guard, your ultimate defense
             against fraudulent returns.</p>
 
         <section id="how-it-works">
-            <h2 class="text-2xl font-bold mb-4 mt-14">How It Works</h2>
-            <ul class="list-disc list-inside mb-8">
-                <p  class="text-lg mb-2">To use the service you'll need to call our Rest API in 3 key moments of your sale lifecycle:</p>
-                <li class="text-lg mb-2">Before confirming a sale, make a call to our service to check your customer's risk score.</li>
-                <li class="text-lg mb-2">When you decide whether you'll go ahead with the sale, call our service to let us know.</li>
-                <li class="text-lg mb-2">If you receive a refund dispute, also call our service.</li>
-                <p class="text-lg mb-2">This information will be used to update the risk score of the
-                customer.</p>
+            <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">How It Works</h1>
+            <ul class="list-disc list-inside">
+                <p  class="mb-6">To use the service you'll need to call our Rest API in 3 key moments of your sale lifecycle:</p>
+                <li class="mb-6 px-8">Before confirming a sale, make a call to our service to check your customer's risk score.</li>
+                <li class="mb-6 px-8">When you decide whether you'll go ahead with the sale, call our service to let us know.</li>
+                <li class="mb-6 px-8">If you receive a refund dispute, also call our service.</li>
+                <p  class="mb-6">This information will be used to update the risk score of the customer.</p>
             </ul>
         </section>
 
         <section id="prices">
-            <h2 class="text-2xl font-bold mb-4 mt-14">Prices</h2>
-            <div class="grid grid-cols-3 gap-4 mb-8">
-                <div class="bg-white rounded-lg p-6">
-                    <p><span class="font-bold text-4xl">$10</span><span class="text-lg">/year</span></p>
-                    <p class="text-sm mt-6">Up to 240 queries (20 per month)</p>
-                    <p class="max-w-max justify-center">
-                        <button class="block h-14 px-8 mt-6 text-center border rounded-lg hover:bg-stone-100">
+            <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Prices</h1>
+            <p class="mb-4">We offer 3 plans, each includeing a different number of API queries available to use. <br> For example the plan "small" includes enough API calls to guard 240 sales. <br> That's enough for a year of ~20 sales per month.</p>
+            <div class="grid  grid-rows-3 sm:grid-cols-3 gap-4  mx-8">
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-center">
+                        <p class="text-base sm:text-lg text-start">small</p>
+                        <p>
+                            <span class="text-5xl font-bold">$15</span>
+                        </p>
+                        <p class="text-base sm:text-lg my-2">Up to 240 queries</p>
+                        <!-- <p class="text-base sm:text-lg mb-2">(~20 per month)</p> -->
+                    </div>
+                    <div class="text-center">
+                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
-                    </p>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg p-6">
-                    <p><span class="font-bold text-4xl">$20</span><span class="text-lg">/year</span></p>
-                    <p class="text-sm mt-6">Up to 500 queries (~40 per month)</p>
-                    <p>
-                        <button class="block h-14 px-8 mt-6 text-center items-center border rounded-lg hover:bg-stone-100">
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-center">
+                        <p class="text-base sm:text-lg text-start">medium</p>
+                        <p>
+                            <span class="text-5xl font-bold">$30</span>
+                        </p>
+                        <p class="text-base sm:text-lg my-2">Up to 600 queries</p>
+                        <!-- <p class="text-base sm:text-lg mb-2">(~50 per month)</p> -->
+                    </div>
+                    <div class="text-center">
+                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
-                    </p>
+                    </div>
                 </div>
-                <div class="bg-white rounded-lg p-6">
-                    <p><span class="font-bold text-4xl">$50</span><span class="text-lg">/year</span></p>
-                    <p class="text-sm mt-6">Up to 2500 queries (~200 per month)</p>
-                    <p>
-                        <button class="block h-14 px-8 mt-6 text-center items-center border rounded-lg hover:bg-stone-100">
+                <div class="bg-white rounded-lg p-4">
+                    <div class="text-center">
+                        <p class="text-base sm:text-lg text-start">large</p>
+                        <p>
+                            <span class="text-5xl font-bold">$70</span>
+                        </p>
+                        <p class="text-base sm:text-lg my-2">Up to 2400 queries</p>
+                        <!-- <p class="text-base sm:text-lg mb-2">(~200 per month)</p> -->
+                    </div>
+                    <div class="text-center">
+                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
-                    </p>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 </body>
 
-<footer class="bg-gray-100 py-4 mt-10 px-40">
+<footer class="bg-gray-100 py-4 mt-10">
     <div class="border-t border-gray-300 pt-2">
-        <p class="text-sm text-center text-gray-400">
+        <p class="text-xs text-center text-gray-400">
             <a href="index.html">SellersGuard</a>
-            <span class="mx-10"></span>
+            <span class="px-8"></span>
             <a href="privacy.html">Privacy Statement</a>
         </p>
     </div>

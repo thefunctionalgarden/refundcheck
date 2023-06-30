@@ -66,7 +66,7 @@ content_types_provided(Req, State) ->
 %%      Result :: cowboy_req:resp_body()
 to_send(Req0, State) ->
     HostTokens = cowboy_req:host_info(Req0),
-    io:format("request from host: ~p~n", [HostTokens]),
+    io:format("request to host: ~p~n", [HostTokens]),
 
     Path = cowboy_req:path(Req0),
     io:format("requested path: ~p~n", [Path]),
