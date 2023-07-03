@@ -10,7 +10,7 @@
                 stdlib,
                 cowboy,
                 epgsql,
-                hackney
+                restc
             ]
         },
         {env,[]},
