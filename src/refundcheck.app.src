@@ -9,11 +9,10 @@
                 kernel,
                 stdlib,
                 cowboy,
-                epgsql
-                % pgapp
+                epgsql,
+                hackney
             ]
         },
-        % {included_applications, [pooler]},  %% https://github.com/epgsql/pooler#pooler-as-an-included-application
         {env,[]},
         {modules, []},
 
