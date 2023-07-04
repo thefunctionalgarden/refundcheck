@@ -71,7 +71,7 @@ to_send(Req0, State) ->
         <<"/login">> ->
             StateToken = base64:encode(crypto:strong_rand_bytes(32)),
             RedirectURL = oauth_step1(StateToken),
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
+            io:format("~p:~p StateToken:~p ~n", [?MODULE, ?LINE, StateToken]),
 
             ReqN = cowboy_req:reply(
                 303,
@@ -80,7 +80,13 @@ to_send(Req0, State) ->
             );
 
         <<"/login_callback">> ->
-            #{code := Code} = cowboy_req:match_qs([{code, [], undefined}], Req0),
+            #{
+                code  := Code,
+                state := StateTokenCallback
+            } = cowboy_req:match_qs([code, state], Req0), % if there's no code, there's an error q
+            %TODO verificar state <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO%
+            io:format("~p:~p StateTokenCallback:~p ~n", [?MODULE, ?LINE, StateTokenCallback]),
+
             OAuthData = oauth_step2(Code),
             io:format("~p:~p OAuthData:~p ~n", [?MODULE, ?LINE, OAuthData]),
             
@@ -123,7 +129,7 @@ oauth_step1(StateToken) ->
 
     % https://developers.google.com/identity/protocols/oauth2/web-server
     OAuth2Endpoint = refundcheck_config:getAuthEndpoint(),
-    OAuth2Path = refundcheck_config:getAuthPath(),
+    OAuth2RN = refundcheck_config:getAuthRN(),
     Q1 = {"client_id", refundcheck_config:getAuthClientId()},
     Q2 = {"redirect_uri", refundcheck_config:getAuthRedirectURILoginCallback()},
     Q3 = {"response_type", <<"code">>},
@@ -134,7 +140,7 @@ oauth_step1(StateToken) ->
     % Q8 = {"login_hint",},
     % Q9 = {"prompt",},
  
-    RedirectURL = restc:construct_url(OAuth2Endpoint, OAuth2Path, [Q1, Q2, Q3, Q4, Q5, Q6, Q7]),
+    RedirectURL = restc:construct_url(OAuth2Endpoint, OAuth2RN, [Q1, Q2, Q3, Q4, Q5, Q6, Q7]),
  
     io:format("~p:~p RedirectURL:~p ~n", [?MODULE, ?LINE, RedirectURL]),
 
@@ -148,18 +154,19 @@ oauth_step2(undefined) ->
         refresh_token => undefined
     };
 oauth_step2(Code) ->
-    %TODO verificar state <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO%
     OAuth2TokenEndpoint = refundcheck_config:getAuthTokenEndpoint(),
+    OAuth2TokenRN     = refundcheck_config:getAuthTokenRN(),
     Q1 = {"client_id", refundcheck_config:getAuthClientId()},
     Q2 = {"client_secret", refundcheck_config:getAuthClientSecret()},
     Q3 = {"code", Code},
     Q4 = {"grant_type", <<"authorization_code">>},
     Q5 = {"redirect_uri", refundcheck_config:getAuthRedirectURIHome()},
-    ContentType = <<"application/x-www-form-urlencoded">>,
 
-    TokenURL = restc:construct_url(OAuth2TokenEndpoint, "", [Q1, Q2, Q3, Q4, Q5]),
-    OAuthData = case restc:request(post, ContentType, TokenURL, []) of
+    TokenURL = restc:construct_url(OAuth2TokenEndpoint, OAuth2TokenRN, [Q1, Q2, Q3, Q4, Q5]),
+    io:format("~p:~p TokenURL:~p ~n", [?MODULE, ?LINE, TokenURL]),
+    OAuthData = case restc:request (post, percent, TokenURL, []) of
         {ok, 200, _H, RespBody} ->
+            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             % {
             %     "access_token": "1/fFAGRNJru1FTz70BzhT3Zg",
             %     "expires_in": 3920,
@@ -177,7 +184,8 @@ oauth_step2(Code) ->
                 refresh_token => RefreshToken
             };
 
-        _Other ->
+        Other ->
+            io:format("~p:~p Other:~p ~n", [?MODULE, ?LINE, Other]),
             #{
                 access_token  => undefined,
                 expires_in    => undefined,

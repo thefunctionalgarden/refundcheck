@@ -7,8 +7,9 @@
     getRoutes/0,
     getHTTPPort/0,
     getAuthEndpoint/0,
-    getAuthPath/0,
+    getAuthRN/0,
     getAuthTokenEndpoint/0,
+    getAuthTokenRN/0,
     getAuthClientId/0,
     getAuthClientSecret/0,
     getAuthRedirectURILoginCallback/0,
@@ -42,12 +43,16 @@ getAuthEndpoint() ->
     V = application:get_env(refundcheck, auth_endpoint, undefined),
     V.
 
-getAuthPath() ->
-    V = application:get_env(refundcheck, auth_path, undefined),
+getAuthRN() ->
+    V = application:get_env(refundcheck, auth_rn, undefined),
     V.
 
 getAuthTokenEndpoint() ->
     V = application:get_env(refundcheck, auth_token_endpoint, undefined),
+    V.
+
+getAuthTokenRN() ->
+    V = application:get_env(refundcheck, auth_token_rn, undefined),
     V.
 
 getAuthClientId() ->
