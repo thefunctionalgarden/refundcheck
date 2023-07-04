@@ -75,9 +75,26 @@ to_send(Req0, State) ->
         <<"/">>             -> <<"public/index.html">>;
         <<"/index.html">>   -> <<"public/index.html">>;
         <<"/privacy.html">> -> <<"public/privacy.html">>;
-        _OtherPath -> <<"public/index.html">>
+        _OtherPath          -> <<"404.html">>
     end,
     
+    ReqN = reply(Req0, Filename),
+
+    {stop, ReqN, State}.  %%  {Result, Req, State}
+
+    
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+reply(Req0, <<"404.html">>) ->
+    ReqN = cowboy_req:reply(
+        404,
+        #{ <<"content-type">> => <<"text/html">> },
+        Req0
+    ),
+    ReqN;
+reply(Req0, Filename) ->
     {ok, #file_info{size = Size}} = file:read_file_info(Filename),
     Req1 = cowboy_req:set_resp_body({sendfile, 0, Size, Filename}, Req0),
     ReqN = cowboy_req:reply(
@@ -85,12 +102,9 @@ to_send(Req0, State) ->
         #{ <<"content-type">> => <<"text/html">> },
         Req1
     ),
-
-    {stop, ReqN, State}.  %%  {Result, Req, State}
-
-    
-
+    ReqN.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
 
 
