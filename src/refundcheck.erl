@@ -6,6 +6,8 @@
 % -feature(maybe_expr, enable). 
 
 -export([
+    login/1,
+
     getColValues/2,
     registerPurchase/1,
     registerRefund/1,
@@ -15,6 +17,39 @@
 
 -compile([export_all]).
 
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+login(#{
+    name  := SellerName,
+    email := SellerMail
+    }) ->
+    
+    Conn = getConnection(),
+
+    SellerData = case selectSellerIds(Conn, SellerMail) of
+        [] -> % register seller
+            SellerKey = refundcheck_config:newToken(64),
+            SellerAvailCalls = refundcheck_config:getSellerInitialCalls(),
+            insertSeller(Conn, SellerName, SellerMail, SellerKey, SellerAvailCalls),
+            % LastPaymentDate = selectSellerLastPaymentDate(z) 
+            #{
+                seller_mail => SellerMail,
+                seller_name => SellerName,
+                seller_key  => SellerKey,
+                seller_avail_calls => SellerAvailCalls
+            };
+
+        [SellerId] ->
+            Seller = selectSeller(Conn, SellerId),
+            #{
+                seller_mail => maps:get(<<"mail">>, Seller),
+                seller_name => maps:get(<<"name">>, Seller),
+                seller_key  => maps:get(<<"key">>,  Seller),
+                seller_avail_calls => maps:get(<<"available_calls">>, Seller)
+            }
+    end,
+    SellerData.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -188,6 +223,17 @@ selectSellerIds(Conn, SellerMail) ->
     ),
     getColValues(RS, id).
 
+selectSeller(Conn, SellerId) ->
+    RS = epgsql:equery(Conn,
+        "SELECT mail, name, key, available_calls
+        FROM refundcheck.seller s
+        WHERE s.id = $1",
+        [SellerId]
+    ),
+    [R] = parse_result(RS),
+    R.
+
+
 selectCustomerIds(Conn, CustomerMail) ->
     RS = epgsql:equery(Conn,
         "SELECT id FROM refundcheck.customer c WHERE c.mail = $1",
@@ -197,13 +243,21 @@ selectCustomerIds(Conn, CustomerMail) ->
 
 
     
-insertSeller(Conn, SellerName, SellerMail, SellerPass) ->
+insertSeller(Conn, SellerName, SellerMail, SellerKey, SellerAvailCalls) ->
     epgsql:equery(Conn,
         "INSERT INTO refundcheck.seller (
-            name, mail, pass)
-            VALUES ($1, $2, $3)",
-        [SellerName, SellerMail, SellerPass]
+            name, mail, key, available_calls)
+            VALUES ($1, $2, $3, $4)",
+        [SellerName, SellerMail, SellerKey, SellerAvailCalls]
     ).
+
+% selectSellerLastPaymentDate(Conn, SellerId) ->
+%     RS = epgsql:equery(Conn,
+%         "SELECT max(date) d FROM refundcheck.payment p WHERE p.seller_id = $1",
+%         [SellerId]
+%     ),
+%     getColValues(RS, d).
+
 
 insertCustomer(Conn, CustomerMail) ->
     epgsql:equery(Conn,

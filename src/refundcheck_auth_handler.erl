@@ -69,9 +69,8 @@ to_send(Req0, State) ->
     Path = cowboy_req:path(Req0),
     case Path of
         <<"/login">> ->
-            StateToken = base64:encode(crypto:strong_rand_bytes(32)),
-            RedirectURL = oauth_step1(StateToken),
-            io:format("~p:~p StateToken:~p ~n", [?MODULE, ?LINE, StateToken]),
+            LoginStateToken = refundcheck_config:newLoginToken(),
+            RedirectURL = oauth_step1(LoginStateToken),
 
             ReqN = cowboy_req:reply(
                 303,
@@ -82,19 +81,36 @@ to_send(Req0, State) ->
         <<"/login_callback">> ->
             #{
                 code  := Code,
-                state := StateTokenCallback
+                state := LoginTokenCallback
             } = cowboy_req:match_qs([code, state], Req0), % if there's no code, there's an error q
-            %TODO verificar state <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< TODO%
-            io:format("~p:~p StateTokenCallback:~p ~n", [?MODULE, ?LINE, StateTokenCallback]),
 
-            OAuthData = oauth_step2(Code),
-            io:format("~p:~p OAuthData:~p ~n", [?MODULE, ?LINE, OAuthData]),
-            
-            PeopleData = getPeopleData(maps:get(access_token, OAuthData)),
-            io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
+            case refundcheck_config:isLoginToken(LoginTokenCallback) of
+                false ->
+                    % invalid login token, back to the login
+                    io:format("~p:~p Invalid LoginTokenCallback:~p ~n", [?MODULE, ?LINE, LoginTokenCallback]),
+                    RedirectURL = refundcheck_config:getURILogin(),
+                    ReqN = cowboy_req:reply(
+                        303,
+                        #{ <<"location">> => RedirectURL }, % to the console
+                        Req0
+                    );
 
-            ReqN = Req0
+                true ->
+                    refundcheck_config:removeLoginToken(LoginTokenCallback),
+                    OAuthData = oauth_step2(Code),
+                    PeopleData = getPeopleData(maps:get(access_token, OAuthData)),
+                    io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
 
+                    % verify if user is registered, or create
+                    refundcheck:login(PeopleData),
+
+                    RedirectURL = refundcheck_config:getURIConsole(),
+                    ReqN = cowboy_req:reply(
+                        303,
+                        #{ <<"location">> => RedirectURL }, % to the console
+                        Req0
+                    )
+            end
     end,
 
     {stop, ReqN, State}.  %%  {Result, Req, State}
@@ -160,13 +176,13 @@ oauth_step2(Code) ->
     Q2 = {"client_secret", refundcheck_config:getAuthClientSecret()},
     Q3 = {"code", Code},
     Q4 = {"grant_type", <<"authorization_code">>},
-    Q5 = {"redirect_uri", refundcheck_config:getAuthRedirectURIHome()},
+    Q5 = {"redirect_uri", refundcheck_config:getAuthRedirectURILoginCallback()},
 
     TokenURL = restc:construct_url(OAuth2TokenEndpoint, OAuth2TokenRN, [Q1, Q2, Q3, Q4, Q5]),
     io:format("~p:~p TokenURL:~p ~n", [?MODULE, ?LINE, TokenURL]),
     OAuthData = case restc:request (post, percent, TokenURL, []) of
         {ok, 200, _H, RespBody} ->
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
+            io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
             % {
             %     "access_token": "1/fFAGRNJru1FTz70BzhT3Zg",
             %     "expires_in": 3920,
@@ -174,9 +190,9 @@ oauth_step2(Code) ->
             %     "scope": "https://www.googleapis.com/auth/drive.metadata.readonly",
             %     "refresh_token": "1//xEoDL4iW3cxlI7yDbSRFYNG01kVKM2C-259HOF2aQbI"
             % }
-            AccessToken  = maps:get("access_token",  RespBody, undefined),
-            ExpiresIn    = maps:get("expires_in",    RespBody, undefined),
-            RefreshToken = maps:get("refresh_token", RespBody, undefined),
+            AccessToken  = maps:get(<<"access_token">>,  RespBody, undefined),
+            ExpiresIn    = maps:get(<<"expires_in">>,    RespBody, undefined),
+            RefreshToken = maps:get(<<"refresh_token">>, RespBody, undefined),
 
             #{
                 access_token  => AccessToken,
@@ -206,27 +222,32 @@ getPeopleData(AccessToken) ->
             #{
                 name  => getPeopleName(RespBody),
                 email => getPeopleEmail(RespBody)
+            };
+        _Other ->
+            #{
+                name  => undefined,
+                email => undefined
             }
     end,
     PeopleData.
 
-getPeopleName(#{"names" := Names}) ->
+getPeopleName(#{<<"names">> := Names}) ->
     getPrimaryName(Names).
 
 getPrimaryName([]) ->
     <<"">>;
-getPrimaryName([#{"displayName" := DisplayName, "metadata" := #{"primary" := true}} | _MoreNames]) ->
+getPrimaryName([#{<<"displayName">> := DisplayName, <<"metadata">> := #{<<"primary">> := true}} | _MoreNames]) ->
     DisplayName;
 getPrimaryName([_NotPrimary | MoreNames]) ->
     getPrimaryName(MoreNames).
 
 
-getPeopleEmail(#{"emailAddresses" := Emails}) ->
+getPeopleEmail(#{<<"emailAddresses">> := Emails}) ->
     getPrimaryEmail(Emails).
 
 getPrimaryEmail([]) ->
     <<"">>;
-getPrimaryEmail([#{"value" := PrimaryEmail, "metadata" := #{"primary" := true}} | _MoreEmails]) ->
+getPrimaryEmail([#{<<"value">> := PrimaryEmail, <<"metadata">> := #{<<"primary">> := true}} | _MoreEmails]) ->
     PrimaryEmail;
 getPrimaryEmail([_NotPrimary | MoreEmails]) ->
     getPrimaryEmail(MoreEmails).

@@ -11,9 +11,13 @@
 
 
 start(_StartType, _StartArgs) ->
+
+    refundcheck_config:init_conf(),
+
     % start for epgsql
      {ok, _} = application:ensure_all_started(epgsql),
 
+    % start cowboy
     Routes   = refundcheck_config:getRoutes(),
     Dispatch = cowboy_router:compile(Routes),
     HTTPPort = refundcheck_config:getHTTPPort(),
@@ -24,7 +28,8 @@ start(_StartType, _StartArgs) ->
             env => #{dispatch => Dispatch},
             protocol_options => [
                 {versions, ['HTTP/1.1', 'HTTP/2']}
-            ]
+            ],
+            middlewares => [cowboy_router, refundcheck_auth_middleware, cowboy_handler]
         }
     ),
 
