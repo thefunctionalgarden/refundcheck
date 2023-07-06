@@ -88,10 +88,10 @@ to_send(Req0, State) ->
                 false ->
                     % invalid login token, back to the login
                     io:format("~p:~p Invalid LoginTokenCallback:~p ~n", [?MODULE, ?LINE, LoginTokenCallback]),
-                    RedirectURL = refundcheck_config:getURILogin(),
+                    LoginURI = refundcheck_config:getURILogin(),
                     ReqN = cowboy_req:reply(
                         303,
-                        #{ <<"location">> => RedirectURL }, % to the console
+                        #{ <<"location">> => LoginURI }, % to the console
                         Req0
                     );
 
@@ -102,12 +102,16 @@ to_send(Req0, State) ->
                     io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
 
                     % verify if user is registered, or create
-                    refundcheck:login(PeopleData),
+                    SellerData = refundcheck:login(PeopleData),
+                    SellerKey  = maps:get(seller_key, SellerData),
 
-                    RedirectURL = refundcheck_config:getURIConsole(),
+                    ConsoleURI = refundcheck_config:getURIConsole(),
                     ReqN = cowboy_req:reply(
                         303,
-                        #{ <<"location">> => RedirectURL }, % to the console
+                        #{
+                            <<"location">> => ConsoleURI, % to the console
+                            <<"Authorization">> => <<"Bearer ", SellerKey/bitstring>>
+                        },
                         Req0
                     )
             end

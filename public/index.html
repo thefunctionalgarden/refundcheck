@@ -10,14 +10,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-4 sm:py-5  px-4 sm:px-8  flex items-center justify-between rounded-lg">
+<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-3 sm:py-5  px-2 sm:px-8  flex items-center justify-between rounded-lg">
     <div>
         <p class="text-3xl sm:text-4xl font-bold">SellersGuard</p>
         <p class="text-lg  sm:text-xl   font-bold text-gray-800">Prevent Refund Abuse</p>
     </div>
-    <div>
-        <a class="text-xs sm:text-base text-gray-600 px-1 sm:px-4" href="#how-it-works">How It Works</a>
-        <a class="text-xs sm:text-base text-gray-600" href="#prices">Prices</a>
+    <div >
+        <div>
+            <button id="loginButton" class="px-3 sm:px-10 py-1 font-bold rounded-md shadow-sm bg-blue-50 hover:bg-blue-100" href="/login"> 
+                Sign up / Sign in
+            </button>
+        </div>
+        <div class="mt-2 text-sm sm:text-base text-gray-600 flex justify-between">
+            <a class="px-1" href="#how-it-works">How It Works</a>
+            <a class="px-1" href="#prices">Prices</a>
+        </div>
     </div>
 </header>
 
@@ -25,14 +32,10 @@
     <div id="intro" class="container mx-auto py-8   text-lg">
         <br><br><br>
 
-        <p class="mb-8">Don't let refund abuse jeopardize your business - Sellers Guard empowers you to sell with
-            confidence and peace of mind.</p>
+        <p class="mb-8 text-center font-bold  text-xl sm:text-2xl">An API to detect refund abusers</p>
 
-        <p class="mb-8">Benefit from the collective record of fellow sellers while maintaining utmost privacy -
-            we leverage the experiences of a trusted network to identify potential refund abusers.</p>
-
-        <p class="mb-8">Protect your business from refund abusers with Sellers Guard, your ultimate defense
-            against fraudulent returns.</p>
+        <p class="mb-8">Don't let refund abuse jeopardize your business - Sellers Guard enables you to sell with
+            confidence.</p>
 
         <section id="how-it-works">
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">How It Works</h1>
@@ -47,7 +50,7 @@
 
         <section id="prices">
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Prices</h1>
-            <p class="mb-4">We offer 3 plans, each includeing a different number of API queries available to use. <br> For example the plan "small" includes enough API calls to guard 240 sales. <br> That's enough for a year of ~20 sales per month.</p>
+            <p class="mb-4">We offer 3 plans, each including a different number of API queries available to use. <br> For example the plan "small" includes enough API calls to guard 240 sales. <br> That's enough for a year of ~20 sales per month.</p>
             <div class="grid  grid-rows-3 sm:grid-cols-3 gap-4  mx-8">
                 <div class="bg-white rounded-lg p-4">
                     <div class="text-center">
@@ -108,5 +111,11 @@
         </p>
     </div>
 </footer>
+
+<script type="text/javascript">
+    document.getElementById("loginButton").onclick = function () {
+        location.href = "/login";
+    };
+</script>
 
 </html>

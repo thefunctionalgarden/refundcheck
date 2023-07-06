@@ -7,6 +7,7 @@
 
 -export([
     login/1,
+    isValidUserAPIKey/1,
 
     getColValues/2,
     registerPurchase/1,
@@ -50,6 +51,11 @@ login(#{
             }
     end,
     SellerData.
+
+
+isValidUserAPIKey(_UserAPIKey) ->
+    true.
+
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

@@ -99,7 +99,8 @@ newToken(Size) when is_integer(Size) ->
 
 newLoginToken() ->
     LoginToken = newToken(32),
-    set_conf({login_token, LoginToken}, []).
+    set_conf({login_token, LoginToken}, []),
+    LoginToken.
 
 isLoginToken(LoginToken) ->
     case get_confs({login_token, LoginToken}) of

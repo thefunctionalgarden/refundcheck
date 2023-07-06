@@ -11,6 +11,12 @@ execute(Req, Env) ->
     logger:info("~p - ~p ~p", [Peer, Method, Path]),
 
     Resp = case Path of
+        <<"/">> ->  % open for landing page
+            {ok, Req, Env};
+
+        <<"/css/sellersguard.css">> ->  % open for css
+            {ok, Req, Env};
+
         <<"/login">> ->  % open for login
             {ok, Req, Env};
 
@@ -23,7 +29,9 @@ execute(Req, Env) ->
                 <<"Bearer ", API_Key/bitstring>> ->
                     API_Key;
                 <<"bearer ", API_Key/bitstring>> ->
-                    API_Key
+                    API_Key;
+                _NoBearerHeader ->
+                    <<"">>
             end,
 
             % validate User API Key
