@@ -66,15 +66,16 @@ content_types_provided(Req, State) ->
 %%      Result :: cowboy_req:resp_body()
 to_send(Req0, State) ->
     io:format("~p:~p ~n", [?MODULE, ?LINE]),
+    application:ensure_all_started(restc),
     Path = cowboy_req:path(Req0),
     case Path of
         <<"/login">> ->
             LoginStateToken = refundcheck_config:newLoginToken(),
-            RedirectURL = oauth_step1(LoginStateToken),
+            OAuthURL = build_oauth_url(LoginStateToken),
 
             ReqN = cowboy_req:reply(
                 303,
-                #{ <<"location">> => RedirectURL },
+                #{ <<"location">> => OAuthURL },
                 Req0
             );
 
@@ -97,7 +98,7 @@ to_send(Req0, State) ->
 
                 true ->
                     refundcheck_config:removeLoginToken(LoginTokenCallback),
-                    OAuthData = oauth_step2(Code),
+                    OAuthData = get_oauth_data(Code),
                     PeopleData = getPeopleData(maps:get(access_token, OAuthData)),
                     io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
 
@@ -105,12 +106,13 @@ to_send(Req0, State) ->
                     SellerData = refundcheck:login(PeopleData),
                     SellerKey  = maps:get(seller_key, SellerData),
 
-                    ConsoleURI = refundcheck_config:getURIConsole(),
+                    ConsoleURI = build_console_url(SellerKey),
                     ReqN = cowboy_req:reply(
-                        303,
+                        303,   %308, %304, %300, %302, %301, %307, %303,
                         #{
-                            <<"location">> => ConsoleURI, % to the console
-                            <<"Authorization">> => <<"Bearer ", SellerKey/bitstring>>
+                            <<"location">> => ConsoleURI % to the console
+                            % <<"authorization">> => <<"Bearer ", SellerKey/bitstring>>
+                            % <<"sellersguard-key">> => SellerKey
                         },
                         Req0
                     )
@@ -142,9 +144,15 @@ to_send(Req0, State) ->
 %     ok.
 
 
-oauth_step1(StateToken) ->
-    io:format("~p:~p ~n", [?MODULE, ?LINE]),
-    application:ensure_all_started(restc),
+build_console_url(SellerKey) ->
+    ConsoleRN = refundcheck_config:getURIConsole(),
+    Q1 = {"user_key", SellerKey},
+    ConsoleURL = restc:construct_url(<<"/">>, ConsoleRN, [Q1]),
+    ConsoleURL.
+
+
+
+build_oauth_url(StateToken) ->
     io:format("~p:~p ~n", [?MODULE, ?LINE]),
 
     % https://developers.google.com/identity/protocols/oauth2/web-server
@@ -160,22 +168,22 @@ oauth_step1(StateToken) ->
     % Q8 = {"login_hint",},
     % Q9 = {"prompt",},
  
-    RedirectURL = restc:construct_url(OAuth2Endpoint, OAuth2RN, [Q1, Q2, Q3, Q4, Q5, Q6, Q7]),
+    OAuthURL = restc:construct_url(OAuth2Endpoint, OAuth2RN, [Q1, Q2, Q3, Q4, Q5, Q6, Q7]),
  
-    io:format("~p:~p RedirectURL:~p ~n", [?MODULE, ?LINE, RedirectURL]),
+    io:format("~p:~p OAuthURL:~p ~n", [?MODULE, ?LINE, OAuthURL]),
 
-    RedirectURL.
+    OAuthURL.
 
 
-oauth_step2(undefined) ->
+get_oauth_data(undefined) ->
     #{
         access_token  => undefined,
         expires_in    => undefined,
         refresh_token => undefined
     };
-oauth_step2(Code) ->
+get_oauth_data(Code) ->
     OAuth2TokenEndpoint = refundcheck_config:getAuthTokenEndpoint(),
-    OAuth2TokenRN     = refundcheck_config:getAuthTokenRN(),
+    OAuth2TokenRN       = refundcheck_config:getAuthTokenRN(),
     Q1 = {"client_id", refundcheck_config:getAuthClientId()},
     Q2 = {"client_secret", refundcheck_config:getAuthClientSecret()},
     Q3 = {"code", Code},

@@ -19,6 +19,8 @@ ALTER TABLE refundcheck.seller
 ALTER TABLE IF EXISTS refundcheck.seller
     ADD COLUMN available_calls integer DEFAULT 20;
 
+ALTER TABLE IF EXISTS refundcheck.seller
+    ADD COLUMN url character varying(500);
 
 
 CREATE TABLE refundcheck.payment
@@ -47,3 +49,4 @@ CREATE TABLE refundcheck.usage
 
 ALTER TABLE IF EXISTS refundcheck.usage
     OWNER to cam;
+

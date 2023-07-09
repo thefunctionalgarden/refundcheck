@@ -66,17 +66,16 @@ content_types_provided(Req, State) ->
 %%      Result :: cowboy_req:resp_body()
 to_send(Req0, State) ->
     HostTokens = cowboy_req:host_info(Req0),
-    io:format("request to host: ~p~n", [HostTokens]),
-
     Path = cowboy_req:path(Req0),
-    io:format("requested path: ~p~n", [Path]),
+    
+    io:format("~p:~p - request to host: ~p~n ~n", [?MODULE, ?LINE, HostTokens]),
+    io:format("~p:~p - requested path: ~p~n", [?MODULE, ?LINE, Path]),
 
     Filename = case Path of
         <<"/">>             -> <<"public/index.html">>;
-        <<"/index.html">>   -> <<"public/index.html">>;
         <<"/privacy.html">> -> <<"public/privacy.html">>;
-        <<"/console">>      -> <<"public/index.html">>;
-        _OtherPath          -> <<"404.html">>
+        <<"/console">>      -> <<"public/console.html">>;
+        _OtherPath          -> <<"public/404.html">>
     end,
     
     ReqN = reply(Req0, Filename),
@@ -88,12 +87,30 @@ to_send(Req0, State) ->
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 
-reply(Req0, <<"404.html">>) ->
+reply(Req0, <<"public/404.html">>) ->
     ReqN = cowboy_req:reply(
         404,
         #{ <<"content-type">> => <<"text/html">> },
         Req0
     ),
+    ReqN;
+reply(Req0, <<"public/console.html">> = FileName) ->
+    ReqN = case file:read_file(FileName) of
+        {ok, Html} ->
+            HtmlToSend = add_scripts(Req0, console, Html),
+            Req1 = cowboy_req:set_resp_body(HtmlToSend, Req0),
+            cowboy_req:reply(
+                200,
+                #{ <<"content-type">> => <<"text/html">> },
+                Req1
+            );
+        _Other ->
+            cowboy_req:reply(
+                400,
+                #{ <<"content-type">> => <<"text/html">> },
+                Req0
+            )
+    end,
     ReqN;
 reply(Req0, Filename) ->
     {ok, #file_info{size = Size}} = file:read_file_info(Filename),
@@ -107,5 +124,31 @@ reply(Req0, Filename) ->
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+add_scripts(Req, console, Html) ->
+    #{
+        user_key := UserAPIKey
+    } = cowboy_req:match_qs([user_key], Req),
+    #{
+        <<"name">> := SellerName,
+        <<"mail">> := SellerMail,
+        <<"available_calls">> := SellerAvCalls
+    } = refundcheck:getSeller(UserAPIKey),
+    Rep = <<"    <script>
+        const seller_name = '~ts';
+        const seller_mail = '~ts';
+        const seller_available_calls = '~p';
+        const seller_url = '';
+        window.onload = function () {
+            document.getElementById('seller_name').innerHTML = seller_name;
+            document.getElementById('seller_mail').innerHTML = seller_mail;
+            document.getElementById('seller_url').innerHTML = seller_url;
+            document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
+        };
+    </script>
 
+</html>">>,
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls]),
+    string:replace(Html, <<"</html>">>, Replacement, trailing).
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

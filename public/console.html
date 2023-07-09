@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SellersGuard</title>
+    <meta name="description" content="Prevent refund abuse" />
+    <meta charSet="utf-8" />
+    <link rel="canonical" href="https://sellersguard.com" />
+    <link href="css/sellersguard.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-3 sm:py-5  px-2 sm:px-8  flex items-center justify-between rounded-lg">
+    <div>
+        <p class="text-3xl sm:text-4xl font-bold">SellersGuard</p>
+        <p class="text-lg  sm:text-xl   font-bold text-gray-800">Prevent Refund Abuse</p>
+    </div>
+    <div >
+        <div>
+            <button id="signoutButton" class="px-3 sm:px-10 py-1 font-bold rounded-md shadow-sm bg-blue-50 hover:bg-blue-100" href="/login"> 
+                Sign out
+            </button>
+        </div>
+    </div>
+</header>
+
+<body class="bg-gray-100 text-gray-900 px-6">
+    <div id="intro" class="container mx-auto py-8   text-lg">
+        <br><br><br>
+
+        <section id="seller_data_section">
+            <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">hello, <span id="seller_name"></span></h1>
+            <ul class="list-disc list-inside">
+                <p class="mb-2">mail: <span id="seller_mail"></span></p>
+                <p class="mb-2">url: <span id="seller_url"></span></p>
+                <p class="mb-2">available calls:  <span id="seller_available_calls"></span></p>
+            </ul>
+        </section>
+
+
+        <section id="welcome" class="mt-4">
+            <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Thanks for your interest</h1>
+            <ul class="list-disc list-inside">
+                <p class="mb-6">We're launching soon!  We'll let you know when the service is available.</p>
+            </ul>
+        </section>
+
+    </div>
+</body>
+
+<footer class="bg-gray-100 py-4 mt-10">
+    <div class="border-t border-gray-300 pt-2">
+        <p class="text-xs text-center text-gray-400">
+            <a href="/">SellersGuard</a>
+            <span class="px-8"></span>
+            <a href="privacy.html">Privacy Statement</a>
+        </p>
+    </div>
+</footer>
+
+
+
+<script type="text/javascript">
+    document.getElementById("signoutButton").onclick = function () {
+        location.href = "/";
+    };
+
+</script>
+
+</html>

@@ -8,6 +8,7 @@
 -export([
     login/1,
     isValidUserAPIKey/1,
+    getSeller/1,
 
     getColValues/2,
     registerPurchase/1,
@@ -17,6 +18,8 @@
 ]).
 
 -compile([export_all]).
+
+-define(KEY_SIZE, 40).
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -30,7 +33,7 @@ login(#{
 
     SellerData = case selectSellerIds(Conn, SellerMail) of
         [] -> % register seller
-            SellerKey = refundcheck_config:newToken(64),
+            SellerKey = refundcheck_config:newToken(?KEY_SIZE),
             SellerAvailCalls = refundcheck_config:getSellerInitialCalls(),
             insertSeller(Conn, SellerName, SellerMail, SellerKey, SellerAvailCalls),
             % LastPaymentDate = selectSellerLastPaymentDate(z) 
@@ -53,8 +56,19 @@ login(#{
     SellerData.
 
 
-isValidUserAPIKey(_UserAPIKey) ->
-    true.
+isValidUserAPIKey(UserAPIKey) ->
+    Conn = getConnection(),
+    Seller = selectSellerByKey(Conn, UserAPIKey),
+    IsValid = case Seller of
+        [] -> false;
+        _Other -> true
+    end,
+    IsValid.
+
+getSeller(UserAPIKey) ->
+    Conn = getConnection(),
+    Seller = selectSellerByKey(Conn, UserAPIKey),
+    Seller.
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -237,6 +251,19 @@ selectSeller(Conn, SellerId) ->
         [SellerId]
     ),
     [R] = parse_result(RS),
+    R.
+
+selectSellerByKey(Conn, SellerKey) ->
+    RS = epgsql:equery(Conn,
+        "SELECT mail, name, available_calls
+        FROM refundcheck.seller s
+        WHERE s.key = $1",
+        [SellerKey]
+    ),
+    R = case parse_result(RS) of
+        [] -> [];
+        [R1] -> R1
+    end,
     R.
 
 
