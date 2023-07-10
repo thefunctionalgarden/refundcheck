@@ -61,7 +61,6 @@ content_types_provided(Req, State) ->
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
 to_json(Req0, State) ->
-    io:format("MMMMMMMMMMMMMMMMM~n"),
     ?LOG_INFO("starting processing"),
 
     CustomerMail = cowboy_req:binding(customer_mail, Req0, <<"">>),

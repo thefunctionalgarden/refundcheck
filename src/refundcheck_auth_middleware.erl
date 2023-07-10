@@ -33,10 +33,7 @@ execute(Req, Env) ->
 
         _Other ->
             % % headers do not go to redirected url
-            % UserAPIKey = cowboy_req:header(<<"sellersguard-key">>, Req, <<"">>),
-            #{
-                user_key := UserAPIKey
-            } = cowboy_req:match_qs([user_key], Req),
+            UserAPIKey = get_api_key(Req),
 
             % validate User API Key
             case refundcheck:isValidUserAPIKey(UserAPIKey) of
@@ -44,9 +41,22 @@ execute(Req, Env) ->
                     io:format("~p:~p ok - Path:~p ~n", [?MODULE, ?LINE, Path]),
                     {ok, Req, Env};
                 false ->
-                    io:format("~p:~p err - Path:~p UserAPIKey:~p ~n", [?MODULE, ?LINE, Path, UserAPIKey]),
+                    io:format("~p:~p err - Invalid User Key - Path:~p ~n", [?MODULE, ?LINE, Path]),
                     {stop, Req}
             end
         end,
 
     Resp.
+
+
+get_api_key(Req) ->
+    case cowboy_req:header(<<"user_key">>, Req, <<"">>) of
+        <<"">> -> 
+            #{
+                user_key := UserAPIKey
+            } = cowboy_req:match_qs([{user_key, [], <<"">>}], Req),
+            UserAPIKey;
+        HeaderUserAPIKey -> HeaderUserAPIKey
+    end.
+
+

@@ -56,6 +56,8 @@ login(#{
     SellerData.
 
 
+isValidUserAPIKey(<<"">>) ->
+    false;
 isValidUserAPIKey(UserAPIKey) ->
     Conn = getConnection(),
     Seller = selectSellerByKey(Conn, UserAPIKey),
@@ -208,9 +210,6 @@ getConnection() ->
     Username = refundcheck_config:getDBUser(), 
     Password = refundcheck_config:getDBPass(), %TODO  ### WARNING!!  use anon fun insted of plain text for the pass
     
-    io:format("db_host:~p~n", [Host]),
-    io:format("db_user:~p~n", [Username]),
-    
     {ok, Conn} = epgsql:connect(Host, Username, Password, []),
     Conn.
 
@@ -255,7 +254,7 @@ selectSeller(Conn, SellerId) ->
 
 selectSellerByKey(Conn, SellerKey) ->
     RS = epgsql:equery(Conn,
-        "SELECT mail, name, available_calls
+        "SELECT id, mail, name, available_calls
         FROM refundcheck.seller s
         WHERE s.key = $1",
         [SellerKey]

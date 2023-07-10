@@ -61,7 +61,6 @@ content_types_provided(Req, State) ->
 %% ProvideCallback   (for GET, HEAD)
 %%      Result :: cowboy_req:resp_body()
 to_json(Req0, State) ->
-    io:format("MMMMMMMMMMMMMMMMM~n"),
     ?LOG_INFO("starting processing"),
 
     CustomerMail = cowboy_req:binding(customer_mail, Req0, <<"">>),
@@ -69,7 +68,10 @@ to_json(Req0, State) ->
     io:format("ApiVersion:~p~n", [ApiVersion]),
     io:format("CustomerMail:~p~n", [CustomerMail]),
 
-    SellerId = 2,  %TODO get SellerId del usuario autenticado
+    UserAPIKey = cowboy_req:header(<<"user_key">>, Req0, <<"">>),
+    Seller = refundcheck:getSeller(UserAPIKey),
+    SellerId = maps:get(<<"id">>, Seller),
+    
     RespBody = processData(SellerId, CustomerMail),
     RespBodyEnc = jsx:encode(RespBody),
     HTTPRespStatus = case RespBody of
