@@ -1,4 +1,4 @@
--module(refundcheck_healthcheck_handler).
+-module(refundcheck_handler_healthcheck).
 
 -behavior(cowboy_handler).
 

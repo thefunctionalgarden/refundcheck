@@ -1,4 +1,4 @@
--module(refundcheck_auth_handler).
+-module(refundcheck_handler_auth).
 
 -behavior(cowboy_handler).
 

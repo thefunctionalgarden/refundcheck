@@ -1,4 +1,4 @@
--module(refundcheck_refund_handler).
+-module(refundcheck_handler_purchase).
 
 -behavior(cowboy_handler).
 
@@ -21,12 +21,14 @@ init(Req0, State) ->
 
 
 allowed_methods(Req0, State) ->
+    io:format("HHHHHHHHHHHH~n"),
+    ?LOG_INFO("HHHHHHHHHHHH"),
     Req = cowboy_req:set_resp_headers(#{
         <<"Access-Control-Allow-Origin">> => <<"*">>,
         <<"Access-Control-Allow-Methods">> => <<"POST">>,
         <<"Access-Control-Allow-Headers">> => <<"Content-Type">>
     }, Req0),
-    {[<<"POST">>, <<"OPTIONS">>], Req, State}.
+    {[<<"GET">>, <<"POST">>, <<"OPTIONS">>], Req, State}.
 
 content_types_accepted(Req, State) ->
     %%  define AcceptCallback callback for PUT, POST, PATCH
@@ -50,7 +52,7 @@ content_types_accepted(Req, State) ->
 %%               | {see_other, URI :: iodata()}
 %%               | false
 from_json(Req0, State) ->
-    ?LOG_INFO("starting refund reg"),
+    ?LOG_INFO("starting purchase reg"),
 
     ApiVersion = cowboy_req:binding(api_version, Req0, <<"v1">>),
     io:format("ApiVersion:~p~n", [ApiVersion]),
@@ -82,8 +84,9 @@ from_json(Req0, State) ->
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 processData(OrgBody) ->
-    RespBody = refundcheck:registerRefund(OrgBody),
+    RespBody = refundcheck:registerPurchase(OrgBody),
     RespBody.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
 

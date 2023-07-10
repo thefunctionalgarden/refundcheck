@@ -1,4 +1,4 @@
--module(refundcheck_customer_global_handler).
+-module(refundcheck_handler_customer_global).
 
 -behavior(cowboy_handler).
 

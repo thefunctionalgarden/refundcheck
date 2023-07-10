@@ -1,4 +1,4 @@
--module(refundcheck_auth_middleware).
+-module(refundcheck_middleware_auth).
 -behaviour(cowboy_middleware).
 
 -export([execute/2]).
@@ -12,23 +12,18 @@ execute(Req, Env) ->
 
     Resp = case Path of
         <<"/">> ->  % open for landing page
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             {ok, Req, Env};
 
         <<"/css/sellersguard.css">> ->  % open for css
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             {ok, Req, Env};
 
         <<"/favicon.ico">> ->  % open for favicon.ico
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             {ok, Req, Env};
 
         <<"/login">> ->  % open for login
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             {ok, Req, Env};
 
         <<"/login_callback">> ->  % open for login
-            io:format("~p:~p ~n", [?MODULE, ?LINE]),
             {ok, Req, Env};
 
         _Other ->

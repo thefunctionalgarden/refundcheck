@@ -1,4 +1,4 @@
--module(refundcheck_seller_handler).
+-module(refundcheck_handler_seller).
 
 -behavior(cowboy_handler).
 

@@ -29,7 +29,7 @@ start(_StartType, _StartArgs) ->
             protocol_options => [
                 {versions, ['HTTP/1.1', 'HTTP/2']}
             ],
-            middlewares => [cowboy_router, refundcheck_auth_middleware, cowboy_handler]
+            middlewares => [cowboy_router, refundcheck_middleware_auth, cowboy_handler]
         }
     ),
 
