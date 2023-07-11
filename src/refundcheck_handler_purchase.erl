@@ -59,7 +59,11 @@ from_json(Req0, State) ->
 
     {ok, OrgBodyEnc, Req1} = cowboy_req:read_body(Req0),
     OrgBody = jsx:decode(OrgBodyEnc, [return_maps, {labels, atom}]),
-    RespBody = processData(OrgBody),
+
+    UserAPIKey = refundcheck_handler_helper:get_api_key(Req1),
+    Seller = refundcheck:getSeller(UserAPIKey),
+
+    RespBody = processData(OrgBody, Seller),
     RespBodyEnc = jsx:encode(RespBody),
     HTTPRespStatus = case RespBody of
         #{result := <<"ok">>}    -> 200;
@@ -83,8 +87,8 @@ from_json(Req0, State) ->
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-processData(OrgBody) ->
-    RespBody = refundcheck:registerPurchase(OrgBody),
+processData(OrgBody, Seller) ->
+    RespBody = refundcheck:registerPurchase(OrgBody, Seller),
     RespBody.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

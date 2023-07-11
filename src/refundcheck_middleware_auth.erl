@@ -26,9 +26,12 @@ execute(Req, Env) ->
         <<"/login_callback">> ->  % open for login
             {ok, Req, Env};
 
+        <<"/healthcheck">> ->  % open for healthcheck
+            {ok, Req, Env};
+
         _Other ->
             % % headers do not go to redirected url
-            UserAPIKey = get_api_key(Req),
+            UserAPIKey = refundcheck_handler_helper:get_api_key(Req),
 
             % validate User API Key
             case refundcheck:isValidUserAPIKey(UserAPIKey) of
@@ -43,15 +46,5 @@ execute(Req, Env) ->
 
     Resp.
 
-
-get_api_key(Req) ->
-    case cowboy_req:header(<<"user_key">>, Req, <<"">>) of
-        <<"">> -> 
-            #{
-                user_key := UserAPIKey
-            } = cowboy_req:match_qs([{user_key, [], <<"">>}], Req),
-            UserAPIKey;
-        HeaderUserAPIKey -> HeaderUserAPIKey
-    end.
 
 

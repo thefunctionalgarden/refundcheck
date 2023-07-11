@@ -9,10 +9,11 @@
     login/1,
     isValidUserAPIKey/1,
     getSeller/1,
+    getSellersMails/0,
 
     getColValues/2,
-    registerPurchase/1,
-    registerRefund/1,
+    registerPurchase/2,
+    registerRefund/2,
     getCustomerHistory/2,
     getCustomerHistoryGlobal/1
 ]).
@@ -72,15 +73,28 @@ getSeller(UserAPIKey) ->
     Seller = selectSellerByKey(Conn, UserAPIKey),
     Seller.
 
+getSellersMails() ->
+    Conn = getConnection(),
+    Sellers = selectSellers(Conn),
+    SellersMails = lists:filtermap(
+        fun(#{<<"mail">> := SellersMail}) -> 
+            {true, SellersMail}
+        end, 
+        Sellers
+    ),
+    SellersMails.
+
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-registerPurchase(PurchaseData) ->
+registerPurchase(PurchaseData, Seller) ->
 
     %TODO validatePurchaseData(PurchaseData)
 
     #{
-        seller_mail     := SellerMail,
+        seller_mail     := SellerMail
+    } = Seller,
+    #{
         customer_mail   := CustomerMail,
         trx_id          := TransactionId,
         product_type    := ProductTypeId,
@@ -129,9 +143,12 @@ registerPurchase(PurchaseData) ->
     R.
     
 
-registerRefund(RefundData) ->
+registerRefund(RefundData, Seller) ->
+
     #{
-        seller_mail := SellerMail,
+        seller_mail := SellerMail
+    } = Seller,
+    #{
         purchase_trx_id := PurchaseTrxId,
         refund_type := RefundTypeId,
         extra_info := RefundDescription
@@ -241,6 +258,14 @@ selectSellerIds(Conn, SellerMail) ->
         [SellerMail]
     ),
     getColValues(RS, id).
+
+selectSellers(Conn) ->
+    RS = epgsql:equery(Conn,
+        "SELECT * FROM refundcheck.seller s",
+        []
+    ),
+    R = parse_result(RS),
+    R.
 
 selectSeller(Conn, SellerId) ->
     RS = epgsql:equery(Conn,
