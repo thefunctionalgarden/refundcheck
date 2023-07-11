@@ -82,7 +82,10 @@ getSellersMails() ->
         end, 
         Sellers
     ),
-    SellersMails.
+    #{
+        result => <<"ok">>,
+        data => SellersMails
+    }.
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

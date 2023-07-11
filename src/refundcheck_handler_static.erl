@@ -138,16 +138,18 @@ add_scripts(Req, console, Html) ->
         const seller_mail = '~ts';
         const seller_available_calls = '~p';
         const seller_url = '';
+        const seller_user_key = '~ts';
         window.onload = function () {
             document.getElementById('seller_name').innerHTML = seller_name;
             document.getElementById('seller_mail').innerHTML = seller_mail;
             document.getElementById('seller_url').innerHTML = seller_url;
             document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
+            document.getElementById('seller_user_key').innerHTML = seller_user_key;
         };
     </script>
 
 </html>">>,
-    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls]),
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey]),
     string:replace(Html, <<"</html>">>, Replacement, trailing).
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
