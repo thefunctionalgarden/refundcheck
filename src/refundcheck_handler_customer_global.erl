@@ -20,40 +20,11 @@
 
 
 trails() ->
-    DefinitionName = <<"CustomerInfo">>,
-    DefinitionProperties =
-        #{ <<"name">> =>
-            #{ type => <<"string">>
-            , description => <<"Customer risk information">>
-            }
-        , <<"description">> =>
-            #{ type => <<"string">>
-            , description => <<"Newspaper description">>
-            }
-        },
-    % Add the definition
-    ok = cowboy_swagger:add_definition(DefinitionName, DefinitionProperties),
 
-    Param_APIVersion = #{
-        name => <<"api_version">>,
-        in => path,
-        description => <<"API version.  Currently \"v1\" is the expected value.">>,
-        required => true,
-        example => <<"v1">>
-    },
-    Param_CustomerMail = #{
-        name => <<"customer_mail">>,
-        in => path,
-        description => <<"The email of the customer that about whom risk information is required.">>,
-        required => true,
-        example => <<"customer@example.com">>
-    },
-    % SecurityReq = #{
-    %     api_key => <<"user_key">>
-    % },
-    RespOK = #{
-        description => "Customer risk information"
-    },
+    Param_APIVersion = refundcheck_handler_helper:get_metadata_param_api_ver(),
+    Param_CustomerMail = refundcheck_handler_helper:get_metadata_param_customer_mail(),
+    RespOK = refundcheck_handler_helper:get_metadata_resp_ok(),
+    % sec
     Metadata = #{
         get => #{
             tags => ["Sellers Guard"],

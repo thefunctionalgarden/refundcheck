@@ -204,7 +204,7 @@ getCustomerHistoryGlobal(CustomerMail) ->
 
 getCustomerHistoryInternal(_Conn, _SellerId, []) ->
     #{
-        result        => <<"error">>,
+        result        => <<"ok">>,
         description   => <<"no data for this customer">>,
         purchases_num => 0,
         refunds_num   => 0,
@@ -427,42 +427,44 @@ insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription) ->
 
 
 consolidateRefundInfo([], Refunds) ->
-    RefundsNum   = length(Refunds),
-    Description  = getRefundInfoDescription(0, 0),
+    RefundsNum = length(Refunds),
+    {Risk, Description} = getRefundRiskAndDescription(0, 0),
     #{
         result        => <<"ok">>,
         description   => Description,
         purchases_num => 0,
         refunds_num   => RefundsNum,
-        refunds_p     => 0
+        refunds_p     => 0,
+        risk          => Risk
     };
 consolidateRefundInfo(Purchases, Refunds) ->
     PurchasesNum = length(Purchases),
     RefundsNum   = length(Refunds),
     RefundsP     = (100 * RefundsNum) div PurchasesNum,
-    Description  = getRefundInfoDescription(PurchasesNum, RefundsP),
+    {Risk, Description} = getRefundRiskAndDescription(PurchasesNum, RefundsP),
     #{
         result        => <<"ok">>,
         description   => Description,
         purchases_num => PurchasesNum,
         refunds_num   => RefundsNum,
-        refunds_p     => RefundsP
+        refunds_p     => RefundsP,
+        risk          => Risk
     }.
 
 
 
-getRefundInfoDescription(0, 0) ->
-    <<"no data for this customer">>;
-getRefundInfoDescription(PurchasesNum, 0) when PurchasesNum < 3 ->
-    <<"very few data for the customer, but looking good">>;
-getRefundInfoDescription(_, 0) ->
-    <<"customer looking great">>;
-getRefundInfoDescription(_, RefundsP) when RefundsP < 30 ->
-    <<"customer has some refunds, looking fair">>;
-getRefundInfoDescription(_, RefundsP) when RefundsP < 51 ->
-    <<"customer looks suspicious">>;
-getRefundInfoDescription(_, _) ->
-    <<"customer looks abusive">>.
+getRefundRiskAndDescription(0, 0) ->
+    {0, <<"no data for this customer">>};
+getRefundRiskAndDescription(PurchasesNum, 0) when PurchasesNum < 3 ->
+    {0, <<"very few data for the customer, but looking good">>};
+getRefundRiskAndDescription(_, 0) ->
+    {0, <<"customer looking great">>};
+getRefundRiskAndDescription(_, RefundsP) when RefundsP < 30 ->
+    {10, <<"customer has some refunds, looking fair">>};
+getRefundRiskAndDescription(_, RefundsP) when RefundsP < 51 ->
+    {30, <<"customer looks suspicious">>};
+getRefundRiskAndDescription(_, _) ->
+    {90, <<"customer looks abusive">>}.
 
 
 

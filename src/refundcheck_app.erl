@@ -74,13 +74,52 @@ start(_StartType, _StartArgs) ->
 
     NewSpec = #{
         openapi => "3.0.0",
+        % swagger => "2.0",
         info => #{title => "Sellers Guard"},
         servers => [
             #{url => "https://api.sellersguard.com"}
-        ]
+        ],
+        components => #{
+            securitySchemes => #{
+                user_key => #{
+                    type => "apiKey",
+                    name => "user_key",
+                    in => "header"
+                }
+            }
+        }
     },
     cowboy_swagger:set_global_spec(NewSpec),
     
+    Definition_CustomerInfo_Name = <<"customer_info_response">>,
+    Definition_CustomerInfo_Properties = #{
+        <<"risk">> => #{
+            type => <<"number">>,
+            description => <<"the refund risk index.  0 = lowest risk, 100 = highest risk">>
+        },
+        <<"description">> => #{
+            type => <<"string">>,
+            description => <<"A text describing the customer risk">>
+        },
+        <<"purchases_num">> => #{
+            type => <<"number">>,
+            description => <<"The number of purchases done by the customer">>
+        },
+        <<"refunds_num">> => #{
+            type => <<"number">>,
+            description => <<"The number of refunds requested by the customer">>
+        },
+        <<"refunds_p">> => #{
+            type => <<"number">>,
+            description => <<"The percentage of purchases for which the customer requested refunds">>
+        },
+        <<"result">> => #{
+            type => <<"string">>,
+            description => <<"'ok' if the query was succesful, 'error' if the query failed">>
+        }
+    },
+    % Add the definition
+    ok = cowboy_swagger:add_definition(Definition_CustomerInfo_Name, Definition_CustomerInfo_Properties),
 
     refundcheck_sup:start_link().
 
