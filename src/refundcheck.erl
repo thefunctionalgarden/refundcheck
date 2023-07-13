@@ -95,7 +95,7 @@ registerPurchase(PurchaseData, Seller) ->
     %TODO validatePurchaseData(PurchaseData)
 
     #{
-        seller_mail     := SellerMail
+        <<"mail">>     := SellerMail
     } = Seller,
     #{
         customer_mail   := CustomerMail,
@@ -149,7 +149,7 @@ registerPurchase(PurchaseData, Seller) ->
 registerRefund(RefundData, Seller) ->
 
     #{
-        seller_mail := SellerMail
+        <<"mail">> := SellerMail
     } = Seller,
     #{
         purchase_trx_id := PurchaseTrxId,

@@ -1,8 +1,11 @@
 -module(refundcheck_handler_customer_global).
 
--behavior(cowboy_handler).
+-behaviour(trails_handler).
+-behaviour(cowboy_handler).
 
 -include_lib("kernel/include/logger.hrl").
+
+-export([trails/0]).
 
 -export([
     init/2,
@@ -14,6 +17,58 @@
     % from_json/2
     to_json/2
 ]).
+
+
+trails() ->
+    DefinitionName = <<"CustomerInfo">>,
+    DefinitionProperties =
+        #{ <<"name">> =>
+            #{ type => <<"string">>
+            , description => <<"Customer risk information">>
+            }
+        , <<"description">> =>
+            #{ type => <<"string">>
+            , description => <<"Newspaper description">>
+            }
+        },
+    % Add the definition
+    ok = cowboy_swagger:add_definition(DefinitionName, DefinitionProperties),
+
+    Param_APIVersion = #{
+        name => <<"api_version">>,
+        in => path,
+        description => <<"API version.  Currently \"v1\" is the expected value.">>,
+        required => true,
+        example => <<"v1">>
+    },
+    Param_CustomerMail = #{
+        name => <<"customer_mail">>,
+        in => path,
+        description => <<"The email of the customer that about whom risk information is required.">>,
+        required => true,
+        example => <<"customer@example.com">>
+    },
+    % SecurityReq = #{
+    %     api_key => <<"user_key">>
+    % },
+    RespOK = #{
+        description => "Customer risk information"
+    },
+    Metadata = #{
+        get => #{
+            tags => ["Sellers Guard"],
+            summary => "Risk information about a customer",
+            description => "Returns risk information about a customer.  This should be called before confirming a purchase.  This allows to know whether the customer has purchased and then refunded to different sellers.",
+            parameters => [Param_APIVersion, Param_CustomerMail],
+            % security => SecurityReq,
+            'content-type' => "application/json",
+            responses => #{
+                200 => RespOK
+            }
+        }
+    },
+    [trails:trail("/refund_check/:api_version/customer/global/:customer_mail", ?MODULE, [], Metadata)].
+
 
 
 init(Req0, State) ->

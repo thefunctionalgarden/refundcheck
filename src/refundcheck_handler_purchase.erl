@@ -1,9 +1,11 @@
 -module(refundcheck_handler_purchase).
 
+-behaviour(trails_handler).
 -behavior(cowboy_handler).
 
 -include_lib("kernel/include/logger.hrl").
 
+-export([trails/0]).
 -export([
     init/2,
     allowed_methods/2,
@@ -14,6 +16,13 @@
     from_json/2
     % to_json/2
 ]).
+
+
+trails() ->
+    Metadata = #{
+        get => #{description => "POST method", 'content-type' => "application/json"}
+    },
+    [trails:trail("/refund_check/:api_version/purchase", ?MODULE, [], Metadata)].
 
 
 init(Req0, State) ->

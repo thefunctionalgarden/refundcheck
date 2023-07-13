@@ -14,6 +14,7 @@
     getDBUser/0,
     getDBPass/0,
     getRoutes/0,
+    getTrails/0,
     getHTTPPort/0,
     getAuthEndpoint/0,
     getAuthRN/0,
@@ -42,6 +43,10 @@ getDBPass() ->
 
 getRoutes() ->
     V = application:get_env(refundcheck, routes, undefined),
+    V.
+
+getTrails() ->
+    V = application:get_env(refundcheck, trails, undefined),
     V.
 
 getHTTPPort() ->

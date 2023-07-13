@@ -1,9 +1,11 @@
 -module(refundcheck_handler_customer).
 
 -behavior(cowboy_handler).
+-behaviour(trails_handler).
 
 -include_lib("kernel/include/logger.hrl").
 
+-export([trails/0]).
 -export([
     init/2,
     allowed_methods/2,
@@ -15,7 +17,13 @@
     to_json/2
 ]).
 
+trails() ->
+    Metadata = #{
+        get => #{description => "GET method", 'content-type' => "application/json"}
+    },
+    [trails:trail("/refund_check/:api_version/customer/:customer_mail", ?MODULE, [], Metadata)].
 
+    
 init(Req0, State) ->
     {cowboy_rest, Req0, State}.
 

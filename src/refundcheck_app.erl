@@ -18,8 +18,37 @@ start(_StartType, _StartArgs) ->
      {ok, _} = application:ensure_all_started(epgsql),
 
     % start cowboy
-    Routes   = refundcheck_config:getRoutes(),
-    Dispatch = cowboy_router:compile(Routes),
+
+    % Routes   = refundcheck_config:getRoutes(),
+    % Dispatch = cowboy_router:compile(Routes),
+
+
+    Handlers = [
+        cowboy_swagger_handler,
+
+        refundcheck_handler_customer_global,
+        refundcheck_handler_customer,
+        refundcheck_handler_purchase,
+        refundcheck_handler_refund
+
+        % refundcheck_handler_healthcheck,
+        % refundcheck_handler_admin,
+        % refundcheck_handler_auth,
+        % refundcheck_handler_static
+    ],
+
+    ConfiguredTrails = refundcheck_config:getTrails(),
+    HandlersTrails   = trails:trails(Handlers),
+    Trails = lists:append(HandlersTrails, ConfiguredTrails),
+
+    % io:format("~p:~p Trails:~p~n", [?MODULE, ?LINE, Trails]),
+    
+    % store them
+    trails:store(Trails),
+    % and then compile them
+    Dispatch = trails:single_host_compile(Trails),
+
+
     HTTPPort = refundcheck_config:getHTTPPort(),
     {ok, _} = cowboy:start_clear(
         refundcheck_http_listener,
@@ -41,6 +70,17 @@ start(_StartType, _StartArgs) ->
     %     ],
     %     #{env => #{dispatch => Dispatch}}
     % ),
+
+
+    NewSpec = #{
+        openapi => "3.0.0",
+        info => #{title => "Sellers Guard"},
+        servers => [
+            #{url => "https://api.sellersguard.com"}
+        ]
+    },
+    cowboy_swagger:set_global_spec(NewSpec),
+    
 
     refundcheck_sup:start_link().
 

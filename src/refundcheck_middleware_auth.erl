@@ -10,6 +10,8 @@ execute(Req, Env) ->
     % error_logger:info_msg("~p: [~p]: ~p ~p", [calendar:universal_time(), Peer, Method, Path]),
     logger:info("~p - ~p ~p", [Peer, Method, Path]),
 
+
+
     Resp = case Path of
         <<"/">> ->  % open for landing page
             {ok, Req, Env};
@@ -27,6 +29,9 @@ execute(Req, Env) ->
             {ok, Req, Env};
 
         <<"/healthcheck">> ->  % open for healthcheck
+            {ok, Req, Env};
+
+        <<"/api-docs", _MoreAPIDocsPath/bitstring>> ->  % open for api-docs
             {ok, Req, Env};
 
         _Other ->
