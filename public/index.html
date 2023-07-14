@@ -32,7 +32,7 @@
     <div id="intro" class="container mx-auto py-8   text-lg">
         <br><br><br>
 
-        <p class="mb-8 text-center font-bold  text-2xl sm:text-3xl">An API to detect refund abusers</p>
+        <p class="mb-8 text-center font-bold  text-2xl sm:text-3xl">An API to prevent refund abuse</p>
 
         <p class="mb-8">Don't let refund abuse jeopardize your business - Sellers Guard enables you to sell with
             confidence.</p>
@@ -44,14 +44,14 @@
                 <li class="mb-6 px-8">Before confirming a sale, make a call to our service to query your customer's risk score.</li>
                 <li class="mb-6 px-8">When you decide whether you'll go ahead with the sale, call our service to let us know.</li>
                 <li class="mb-6 px-8">If you receive a refund dispute, also call our service.</li>
-                <p  class="mb-6">This information will be used to update the risk score of the customer.</p>
+                <p  class="mb-4">This information will be used to update the risk score of the customer.</p>
+                <p  class="mb-6">You can check the <a class="underline hover:to-blue-900" href="/api-docs">SellersGuard API specification</a>.</p>
             </ul>
         </section>
 
         <section id="prices">
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Prices</h1>
-            <p class="mb-8">3 plans, each including a different number of API queries available to use. <br> For example, 240 queries would be enough to guard a year of ~20 sales per month.</p>
-            <div class="grid  grid-rows-3 sm:grid-cols-3 gap-4  mx-8">
+            <div class="grid  sm:grid-cols-3 gap-4  mx-8">
                 <div class="bg-white rounded-lg p-4">
                     <div class="text-center">
                         <p class="text-base sm:text-lg text-start">small</p>
@@ -60,9 +60,7 @@
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 240 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~20 per month)</p> -->
-                    </div>
-                    <div class="text-center">
-                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
+                        <button id="buySmallButton" class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
                     </div>
@@ -75,9 +73,7 @@
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 600 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~50 per month)</p> -->
-                    </div>
-                    <div class="text-center">
-                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
+                        <button id="buyMediumButton" class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
                     </div>
@@ -90,14 +86,14 @@
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 2400 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~200 per month)</p> -->
-                    </div>
-                    <div class="text-center">
-                        <button class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
+                        <button id="buyLargeButton" class="p-4 font-bold text-center rounded-lg shadow-xl bg-blue-50 hover:bg-blue-100">
                             Protect your business
                         </button>
                     </div>
                 </div>
             </div>
+            <p class="mt-8">Each plan includs a number of API queries available to use.</p>
+            <p class="mt-4">For example, 240 queries would be enough to guard a year of ~20 sales per month.</p>
         </section>
     </div>
 </body>
@@ -114,6 +110,15 @@
 
 <script type="text/javascript">
     document.getElementById("loginButton").onclick = function () {
+        location.href = "/login";
+    };
+    document.getElementById("buySmallButton").onclick = function () {
+        location.href = "/login";
+    };
+    document.getElementById("buyMediumButton").onclick = function () {
+        location.href = "/login";
+    };
+    document.getElementById("buyLargeButton").onclick = function () {
         location.href = "/login";
     };
 </script>

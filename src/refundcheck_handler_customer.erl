@@ -18,9 +18,7 @@
 ]).
 
 trails() ->
-    Metadata = #{
-        get => #{description => "GET method", 'content-type' => "application/json"}
-    },
+    Metadata = #{},  % we don't need this in the Swagger
     [trails:trail("/refund_check/:api_version/customer/:customer_mail", ?MODULE, [], Metadata)].
 
     

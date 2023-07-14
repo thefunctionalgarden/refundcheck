@@ -16,13 +16,12 @@
     from_json/2
     % to_json/2
 ]).
+-export([get_schema_customer_refund_report_response/0]).
+-export([get_schema_customer_refund_report/0]).
 
 
 trails() ->
-    Metadata = #{
-        get => #{description => "POST method", 'content-type' => "application/json"}
-    },
-    [trails:trail("/refund_check/:api_version/refund", ?MODULE, [], Metadata)].
+    [trails:trail("/refund_check/:api_version/refund", ?MODULE, [], get_metada())].
 
 
 init(Req0, State) ->
@@ -97,6 +96,121 @@ from_json(Req0, State) ->
 processData(OrgBody, Seller) ->
     RespBody = refundcheck:registerRefund(OrgBody, Seller),
     RespBody.
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+get_schema_customer_refund_report_response() ->
+    Schema_CustomerRefundReportResp = #{
+        <<"description">> => #{
+            type => <<"string">>,
+            description => <<"A text describing the result of the operation">>
+        },
+        <<"result">> => #{
+            type => <<"string">>,
+            description => <<"'ok' if the report was succesful, 'error' if the report failed">>
+        }
+    },
+    Schema_CustomerRefundReportResp.
+
+
+get_schema_customer_refund_report() ->
+    Schema_CustomerRefundReport = #{
+        <<"customer_mail">> => #{
+            type => <<"string">>,
+            description => <<"Customer email">>
+        },
+        <<"purchase_trx_id">> => #{
+            type => <<"string">>,
+            description => <<"Id of the purchase transaction that is refunded">>
+        },
+        <<"refund_type">> => #{
+            type => <<"number">>,
+            description => <<"An Id describing the kind of product or service refundd by the customer in this transaction:\n
+1 : Total refund \n
+2 : Partial refund">>
+        },
+        <<"extra_info">> => #{
+            type => <<"string">>,
+            description => <<"Some additional information about the refund.  Can be \"\".">>
+        }
+    },
+    Schema_CustomerRefundReport.
+
+
+get_metadata_refund_resp_ok() ->
+    RespOKExample0 = #{
+        <<"result">> => <<"ok">>,
+        <<"description">> => <<"refund has been registered">>
+    },
+    RespOK = #{
+        description => "Refund information correctly registered.",
+        content => #{
+            'application/json' => #{
+                schema => cowboy_swagger:schema(<<"customer_refund_report_response">>),
+                examples => #{
+                    <<"ok_0">> => #{
+                        summary => "Refund correctly registered",
+                        value => jsx:encode(RespOKExample0)
+                    }
+                }
+            }
+        }
+    },
+    RespOK.
+
+get_metadata_refund_request_body() ->
+    ReqExample0 = #{
+        <<"customer_mail">> => <<"new.customer.01@somemail.com">>,
+        <<"purchase_trx_id">> => <<"TRX-0123456789">>,
+        <<"refund_type">> => 2,
+        <<"extra_info">> => <<"a description">>
+    },
+    #{
+        description => "Customer refund data to be registered.  This will be used to update customer's risk score.",
+        content => #{
+            'application/json' => #{
+                schema => cowboy_swagger:schema(<<"customer_refund_report">>),
+                examples => #{
+                    <<"ok_0">> => #{
+                        summary => "A standard refund",
+                        value => jsx:encode(ReqExample0)
+                    }
+                }
+            }
+        },
+        required => true
+    }.
+
+
+
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+get_metada() ->
+    Param_APIVersion = refundcheck_handler_helper:get_metadata_param_api_ver(),
+    RequestBody = get_metadata_refund_request_body(),
+    RespOK = get_metadata_refund_resp_ok(),
+    Security = #{user_key => ["apiKey"]},
+    Metadata = #{
+        post => #{
+            tags => ["Sellers Guard"],
+            summary => "Report a Refund",
+            description => "Report information about a refund.  \
+                            This function must be called after a refund has been requested.  \
+                            This reporting plays an important role in the calculation process for assessing the customer's risk of refund.",
+            parameters => [Param_APIVersion],
+            requestBody => RequestBody,
+            security => [Security],
+            'content-type' => "application/json",
+            responses => #{
+                200 => RespOK
+            }
+        }
+    },
+    Metadata.
+
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

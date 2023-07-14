@@ -75,7 +75,7 @@ start(_StartType, _StartArgs) ->
     NewSpec = #{
         openapi => "3.0.0",
         % swagger => "2.0",
-        info => #{title => "Sellers Guard"},
+        info => #{title => "SellersGuard"},
         servers => [
             #{url => "https://api.sellersguard.com"}
         ],
@@ -92,34 +92,24 @@ start(_StartType, _StartArgs) ->
     cowboy_swagger:set_global_spec(NewSpec),
     
     Definition_CustomerInfo_Name = <<"customer_info_response">>,
-    Definition_CustomerInfo_Properties = #{
-        <<"risk">> => #{
-            type => <<"number">>,
-            description => <<"the refund risk index.  0 = lowest risk, 100 = highest risk">>
-        },
-        <<"description">> => #{
-            type => <<"string">>,
-            description => <<"A text describing the customer risk">>
-        },
-        <<"purchases_num">> => #{
-            type => <<"number">>,
-            description => <<"The number of purchases done by the customer">>
-        },
-        <<"refunds_num">> => #{
-            type => <<"number">>,
-            description => <<"The number of refunds requested by the customer">>
-        },
-        <<"refunds_p">> => #{
-            type => <<"number">>,
-            description => <<"The percentage of purchases for which the customer requested refunds">>
-        },
-        <<"result">> => #{
-            type => <<"string">>,
-            description => <<"'ok' if the query was succesful, 'error' if the query failed">>
-        }
-    },
-    % Add the definition
+    Definition_CustomerInfo_Properties = refundcheck_handler_customer_global:get_schema_customer_risk_info(),
     ok = cowboy_swagger:add_definition(Definition_CustomerInfo_Name, Definition_CustomerInfo_Properties),
+
+    Definition_CustomerPurchaseReport_Name = <<"customer_purchase_report">>,
+    Definition_CustomerPurchaseReport_Properties = refundcheck_handler_purchase:get_schema_customer_purchase_report(),
+    ok = cowboy_swagger:add_definition(Definition_CustomerPurchaseReport_Name, Definition_CustomerPurchaseReport_Properties),
+
+    Definition_CustomerPurchaseReportResp_Name = <<"customer_purchase_report_response">>,
+    Definition_CustomerPurchaseReportResp_Properties = refundcheck_handler_purchase:get_schema_customer_purchase_report_response(),
+    ok = cowboy_swagger:add_definition(Definition_CustomerPurchaseReportResp_Name, Definition_CustomerPurchaseReportResp_Properties),
+
+    Definition_CustomerRefundReport_Name = <<"customer_refund_report">>,
+    Definition_CustomerRefundReport_Properties = refundcheck_handler_refund:get_schema_customer_refund_report(),
+    ok = cowboy_swagger:add_definition(Definition_CustomerRefundReport_Name, Definition_CustomerRefundReport_Properties),
+
+    Definition_CustomerRefundReportResp_Name = <<"customer_refund_report_response">>,
+    Definition_CustomerRefundReportResp_Properties = refundcheck_handler_refund:get_schema_customer_refund_report_response(),
+    ok = cowboy_swagger:add_definition(Definition_CustomerRefundReportResp_Name, Definition_CustomerRefundReportResp_Properties),
 
     refundcheck_sup:start_link().
 
@@ -129,3 +119,5 @@ stop(_State) ->
     ok.
 
 %% internal functions
+
+
