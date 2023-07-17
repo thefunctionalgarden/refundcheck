@@ -54,6 +54,7 @@ login(#{
                 seller_avail_calls => maps:get(<<"available_calls">>, Seller)
             }
     end,
+    closeConnection(Conn),
     SellerData.
 
 
@@ -66,11 +67,13 @@ isValidUserAPIKey(UserAPIKey) ->
         [] -> false;
         _Other -> true
     end,
+    closeConnection(Conn),
     IsValid.
 
 getSeller(UserAPIKey) ->
     Conn = getConnection(),
     Seller = selectSellerByKey(Conn, UserAPIKey),
+    closeConnection(Conn),
     Seller.
 
 getSellersMails() ->
@@ -82,6 +85,7 @@ getSellersMails() ->
         end, 
         Sellers
     ),
+    closeConnection(Conn),
     #{
         result => <<"ok">>,
         data => SellersMails
@@ -124,7 +128,7 @@ registerPurchase(PurchaseData, Seller) ->
     % insertPurchase(Conn, SellerId, CustomerId, ProductTypeId, Date, AmountRangeId, AmountCurrency, TransactionId),
     Res = insertPurchase(Conn, SellerId, CustomerId, ProductTypeId, AmountRangeId, AmountCurrency, TransactionId),
     io:format("Insert Res:~p~n", [Res]),
-    ok = epgsql:close(Conn),
+    ok = closeConnection(Conn),
       
     R = case Res of
         {error,{error,error,_ErrorCode,unique_violation, _InternalDesc, _ErrorDetail}} ->
@@ -162,7 +166,7 @@ registerRefund(RefundData, Seller) ->
     [SellerId] = selectSellerIds(Conn, SellerMail),
     Res = insertRefund(Conn, SellerId, PurchaseTrxId, RefundTypeId, RefundDescription),
     io:format("Insert Res:~p~n", [Res]),
-    ok = epgsql:close(Conn),
+    ok = closeConnection(Conn),
       
     R = case Res of
         {ok, 1} ->            
@@ -188,7 +192,7 @@ getCustomerHistory(SellerId, CustomerMail) ->
     CustomerIds = selectCustomerIds(Conn, CustomerMail),
     Res = getCustomerHistoryInternal(Conn, SellerId, CustomerIds),
 
-    ok = epgsql:close(Conn),
+    ok = closeConnection(Conn),
     Res.
 
 
@@ -198,7 +202,7 @@ getCustomerHistoryGlobal(CustomerMail) ->
     CustomerIds = selectCustomerIds(Conn, CustomerMail),
     Res = getCustomerHistoryInternal(Conn, [], CustomerIds),
 
-    ok = epgsql:close(Conn),
+    ok = closeConnection(Conn),
     Res.
 
 
@@ -232,6 +236,9 @@ getConnection() ->
     
     {ok, Conn} = epgsql:connect(Host, Username, Password, []),
     Conn.
+
+closeConnection(Conn) ->
+    epgsql:close(Conn).
 
 
 getColValues(ResultSet, ColumnName) when is_atom(ColumnName) -> 
