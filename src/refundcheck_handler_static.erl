@@ -75,6 +75,7 @@ to_send(Req0, State) ->
         <<"/">>             -> <<"public/index.html">>;
         <<"/privacy.html">> -> <<"public/privacy.html">>;
         <<"/console">>      -> <<"public/console.html">>;
+        <<"/checkout">>     -> <<"public/checkout.html">>;
         _OtherPath          -> <<"public/404.html">>
     end,
     

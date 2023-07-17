@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+#intro {
+    margin-top: 25px;
+}
+
+#how-it-works {
+    scroll-margin-top: 120px;
+}
+
+#prices {
+    scroll-margin-top: 120px;
+}
+
+ul {
+    margin-top: 0;
+}
+
+input:checked+label {
+    background-color: rgb(219 234 254);
+    border-color: rgb(191 219 254);
+}

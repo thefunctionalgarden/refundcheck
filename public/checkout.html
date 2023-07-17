@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SellersGuard</title>
+    <meta name="description" content="Prevent refund abuse" />
+    <meta charSet="utf-8" />
+    <link rel="canonical" href="https://sellersguard.com" />
+    <link href="css/sellersguard.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-3 sm:py-5  px-2 sm:px-8  flex items-center justify-between rounded-lg">
+    <div>public/console.html
+        <p class="text-3xl sm:text-4xl font-bold">SellersGuard</p>
+        <p class="text-lg  sm:text-xl   font-bold text-gray-800">Prevent Refund Abuse</p>
+    </div>
+    <div >
+        <div>
+            <button id="signoutButton" class="px-3 sm:px-10 py-1 font-bold rounded-md shadow-sm bg-blue-50 hover:bg-blue-100" href="/login"> 
+                Sign out
+            </button>
+        </div>
+    </div>
+</header>
+
+<body class="bg-gray-100 text-gray-900 px-6">
+    <div id="intro" class="container mx-auto py-8   text-lg">
+        <br><br><br>
+
+        <section id="seller_data_section">
+            <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">hello, <span id="seller_name"></span></h1>
+            <ul class="list-disc list-inside">
+                <p class="mb-2">mail: <span id="seller_mail"></span></p>
+                <p class="mb-2">url: <span id="seller_url"></span></p>
+                <p class="mb-2">available calls:  <span id="seller_available_calls"></span></p>
+                <p class="mb-2">API key: <span id="seller_user_key"></span></p>
+            </ul>
+        </section>
+
+
+
+        <div id="checkout">
+            <div class="grid  sm:grid-cols-3 gap-4  mx-8 mt-6 mb-2">
+                <input id="plan-s" type="radio" name="plan" value="plan-s01" class="hidden">
+                <label for="plan-s" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
+                    <div>
+                        <span class="text-base sm:text-base font-bold">small</span>
+                        <span> </span>
+                        <span class="text-3xl font-bold">$15</span>
+                    </div>
+                    <p class="text-base sm:text-base my-2">Up to 240 queries</p>
+                </label>
+                <input id="plan-m" type="radio" checked name="plan" value="plan-m01" class="hidden">
+                <label for="plan-m" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
+                    <span class="text-base sm:text-base font-bold text-start">medium</span>
+                    <span class="text-3xl font-bold ">$30</span>
+                    <p class="text-base sm:text-base my-1">Up to 600 queries</p>
+                </label>
+                <input id="plan-l" type="radio" name="plan" value="plan-l01" class="hidden">
+                <label for="plan-l" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
+                    <span class="text-base sm:text-base font-bold text-start">large</span>
+                    <span class="text-3xl font-bold">$70</span>
+                    <p class="text-base sm:text-base my-2">Up to 2400 queries</p>
+                </label>
+            </div>
+        </div>
+
+    <!-- Replace "test" with your own sandbox Business account app client ID -->
+    <script src="https://www.paypal.com/sdk/js?client-id=test&currency=USD"></script>
+    <!-- Set up a container element for the button -->
+    <div id="paypal-button-container" class="p-10"></div>
+    <script>
+        paypal.Buttons({
+            // Order is created on the server and the order id is returned
+            createOrder() {
+                return fetch("/my-server/create-paypal-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    // use the "body" param to optionally pass additional order information
+                    // like product skus and quantities
+                    body: JSON.stringify({
+                        cart: [
+                            {
+                                sku: "YOUR_PRODUCT_STOCK_KEEPING_UNIT",
+                                quantity: "1",
+                            },
+                        ],
+                    }),
+                })
+                    .then((response) => response.json())
+                    .then((order) => order.id);
+            },
+            // Finalize the transaction on the server after payer approval
+            onApprove(data) {
+                return fetch("/my-server/capture-paypal-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        orderID: data.orderID
+                    })
+                })
+                    .then((response) => response.json())
+                    .then((orderData) => {
+                        // Successful capture! For dev/demo purposes:
+                        console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+                        const transaction = orderData.purchase_units[0].payments.captures[0];
+                        alert(`Transaction ${transaction.status}: ${transaction.id}\n\nSee console for all available details`);
+                        // When ready to go live, remove the alert and show a success message within this page. For example:
+                        // const element = document.getElementById('paypal-button-container');
+                        // element.innerHTML = '<h3>Thank you for your payment!</h3>';
+                        // Or go to another URL:  window.location.href = 'thank_you.html';
+                    });
+            }
+        }).render('#paypal-button-container');
+    </script>
+
+
+
+
+
+    </div>
+</body>
+
+<footer class="bg-gray-100 py-4 mt-10">
+    <div class="border-t border-gray-300 pt-2">
+        <p class="text-xs text-center text-gray-400">
+            <a href="/">SellersGuard</a>
+            <span class="px-8"></span>
+            <a href="privacy.html">Privacy Statement</a>
+        </p>
+    </div>
+</footer>
+
+
+
+<script type="text/javascript">
+    document.getElementById("signoutButton").onclick = function () {
+        location.href = "/";
+    };
+
+</script>
+
+</html>
