@@ -18,13 +18,15 @@
     getHTTPPort/0,
     getAuthEndpoint/0,
     getAuthRN/0,
-    getAuthTokenEndpoint/0,
-    getAuthTokenRN/0,
-    getAuthClientId/0,
-    getAuthClientSecret/0,
+    getAuthTokenEndpoint/1,
+    getAuthTokenRN/1,
+    getAuthClientId/1,
+    getAuthClientSecret/1,
     getAuthRedirectURILoginCallback/0,
     getURIConsole/0,
     getURILogin/0,
+
+    getPaypalEndpoint/0,
 
     getSellerInitialCalls/0
 ]).
@@ -64,20 +66,33 @@ getAuthRN() ->
     V = application:get_env(refundcheck, auth_rn, undefined),
     V.
 
-getAuthTokenEndpoint() ->
-    V = application:get_env(refundcheck, auth_token_endpoint, undefined),
+getPaypalEndpoint() ->
+    V = application:get_env(refundcheck, paypal_endpoint, undefined),
     V.
 
-getAuthTokenRN() ->
-    V = application:get_env(refundcheck, auth_token_rn, undefined),
+getAuthTokenEndpoint(<<"paypal">>) ->
+    V = getPaypalEndpoint(),
+    V;
+getAuthTokenEndpoint(<<"google">>) ->
+    V = application:get_env(refundcheck, auth_token_endpoint_google, undefined),
     V.
 
-getAuthClientId() ->
-    V = application:get_env(refundcheck, auth_client_id, undefined),
+getAuthTokenRN(Provider) ->
+    ConfKeyStr = <<"auth_token_rn_", Provider/bitstring>>,
+    ConfKey = binary_to_atom(ConfKeyStr),
+    V = application:get_env(refundcheck, ConfKey, undefined),
     V.
 
-getAuthClientSecret() ->
-    V = application:get_env(refundcheck, auth_client_secret, undefined),
+getAuthClientId(Provider) ->
+    ConfKeyStr = <<"auth_client_id_", Provider/bitstring>>,
+    ConfKey = binary_to_atom(ConfKeyStr),
+    V = application:get_env(refundcheck, ConfKey, undefined),
+    V.
+
+getAuthClientSecret(Provider) ->
+    ConfKeyStr = <<"auth_client_secret_", Provider/bitstring>>,
+    ConfKey = binary_to_atom(ConfKeyStr),
+    V = application:get_env(refundcheck, ConfKey, undefined),
     V.
 
 getAuthRedirectURILoginCallback() ->

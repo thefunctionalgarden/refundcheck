@@ -29,7 +29,9 @@ start(_StartType, _StartArgs) ->
         refundcheck_handler_customer_global,
         refundcheck_handler_customer,
         refundcheck_handler_purchase,
-        refundcheck_handler_refund
+        refundcheck_handler_refund,
+
+        refundcheck_handler_checkout
 
         % refundcheck_handler_healthcheck,
         % refundcheck_handler_admin,

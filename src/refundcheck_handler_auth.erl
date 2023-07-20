@@ -3,7 +3,6 @@
 -behavior(cowboy_handler).
 
 % -include_lib("kernel/include/logger.hrl").
--include_lib("kernel/include/file.hrl").
 
 -export([
     init/2,
@@ -15,6 +14,11 @@
     % from_json/2
     to_send/2
 ]).
+
+-define(PROVIDER, <<"google">>).
+
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
 
 init(Req0, State) ->
@@ -98,7 +102,7 @@ to_send(Req0, State) ->
 
                 true ->
                     refundcheck_config:removeLoginToken(LoginTokenCallback),
-                    OAuthData = get_oauth_data(Code),
+                    OAuthData = get_access_token(Code),
                     PeopleData = getPeopleData(maps:get(access_token, OAuthData)),
                     io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
 
@@ -158,7 +162,7 @@ build_oauth_url(StateToken) ->
     % https://developers.google.com/identity/protocols/oauth2/web-server
     OAuth2Endpoint = refundcheck_config:getAuthEndpoint(),
     OAuth2RN = refundcheck_config:getAuthRN(),
-    Q1 = {"client_id", refundcheck_config:getAuthClientId()},
+    Q1 = {"client_id", refundcheck_config:getAuthClientId(?PROVIDER)},
     Q2 = {"redirect_uri", refundcheck_config:getAuthRedirectURILoginCallback()},
     Q3 = {"response_type", <<"code">>},
     Q4 = {"scope", <<"https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile">>},
@@ -175,24 +179,24 @@ build_oauth_url(StateToken) ->
     OAuthURL.
 
 
-get_oauth_data(undefined) ->
+get_access_token(undefined) ->
     #{
         access_token  => undefined,
         expires_in    => undefined,
         refresh_token => undefined
     };
-get_oauth_data(Code) ->
-    OAuth2TokenEndpoint = refundcheck_config:getAuthTokenEndpoint(),
-    OAuth2TokenRN       = refundcheck_config:getAuthTokenRN(),
-    Q1 = {"client_id", refundcheck_config:getAuthClientId()},
-    Q2 = {"client_secret", refundcheck_config:getAuthClientSecret()},
+get_access_token(Code) ->
+    OAuth2TokenEndpoint = refundcheck_config:getAuthTokenEndpoint(?PROVIDER),
+    OAuth2TokenRN       = refundcheck_config:getAuthTokenRN(?PROVIDER),
+    Q1 = {"client_id", refundcheck_config:getAuthClientId(?PROVIDER)},
+    Q2 = {"client_secret", refundcheck_config:getAuthClientSecret(?PROVIDER)},
     Q3 = {"code", Code},
     Q4 = {"grant_type", <<"authorization_code">>},
     Q5 = {"redirect_uri", refundcheck_config:getAuthRedirectURILoginCallback()},
 
     TokenURL = restc:construct_url(OAuth2TokenEndpoint, OAuth2TokenRN, [Q1, Q2, Q3, Q4, Q5]),
     io:format("~p:~p TokenURL:~p ~n", [?MODULE, ?LINE, TokenURL]),
-    OAuthData = case restc:request (post, percent, TokenURL, []) of
+    OAuthData = case restc:request(post, percent, TokenURL, []) of
         {ok, 200, _H, RespBody} ->
             io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
             % {

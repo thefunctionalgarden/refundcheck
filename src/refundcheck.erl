@@ -10,6 +10,7 @@
     isValidUserAPIKey/1,
     getSeller/1,
     getSellersMails/0,
+    getPlanAmount/1,
 
     getColValues/2,
     registerPurchase/2,
@@ -91,6 +92,13 @@ getSellersMails() ->
         data => SellersMails
     }.
 
+
+getPlanAmount(<<"plan-s01">>) ->
+    15;
+getPlanAmount(<<"plan-m01">>) ->
+    30;
+getPlanAmount(<<"plan-l01">>) ->
+    70.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
