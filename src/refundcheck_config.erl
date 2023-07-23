@@ -4,6 +4,7 @@
     init_conf/0,
     get_conf/1,
     set_conf/2,
+    delete_conf/1,
 
     newToken/1,
     newLoginToken/0,
@@ -24,6 +25,7 @@
     getAuthClientSecret/1,
     getAuthRedirectURILoginCallback/0,
     getURIConsole/0,
+    getURICheckout/0,
     getURILogin/0,
 
     getPaypalEndpoint/0,
@@ -101,6 +103,10 @@ getAuthRedirectURILoginCallback() ->
 
 getURIConsole() ->
     V = application:get_env(refundcheck, uri_console, undefined),
+    V.
+
+getURICheckout() ->
+    V = application:get_env(refundcheck, uri_checkout, undefined),
     V.
 
 getURILogin() ->

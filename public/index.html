@@ -1,14 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>SellersGuard</title>
-    <meta name="description" content="Prevent refund abuse" />
+    <title>SellersGuard - A Service to Prevent Refund Abuse</title>
+    <meta name="description" content="SellersGuard - Reduce the risk of fraudulent refunds. For creators and developers selling products and services online." />
     <meta charSet="utf-8" />
     <link rel="canonical" href="https://sellersguard.com" />
     <link href="css/sellersguard.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EXG537G2L2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-EXG537G2L2');
+</script>
 
 <header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-3 sm:py-5  px-2 sm:px-8  flex items-center justify-between rounded-lg">
     <div>
@@ -45,18 +55,19 @@
                 <li class="mb-6 px-8">When you decide whether you'll go ahead with the sale, call our service to let us know.</li>
                 <li class="mb-6 px-8">If you receive a refund dispute, also call our service.</li>
                 <p  class="mb-4">This information will be used to update the risk score of the customer.</p>
-                <p  class="mb-6">You can check the <a class="underline hover:to-blue-900" href="/api-docs">SellersGuard API specification</a>.</p>
+                <p  class="mb-6">You can easily integrate our API into your existing checkout process. Please check the <a class="underline hover:to-blue-900" href="/api-docs">SellersGuard API specification</a>.</p>
             </ul>
         </section>
 
         <section id="prices">
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Prices</h1>
+            <p class="mb-6">Sign up to try the service for free or choose a plan.</p>
             <div class="grid  sm:grid-cols-3 gap-4  mx-8">
                 <div class="bg-white rounded-lg p-4">
                     <div class="text-center">
                         <p class="text-base sm:text-lg text-start">small</p>
                         <p>
-                            <span class="text-5xl font-bold">$15</span>
+                            <span class="text-5xl font-bold">$9</span>
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 240 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~20 per month)</p> -->
@@ -69,7 +80,7 @@
                     <div class="text-center">
                         <p class="text-base sm:text-lg text-start">medium</p>
                         <p>
-                            <span class="text-5xl font-bold">$30</span>
+                            <span class="text-5xl font-bold">$19</span>
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 600 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~50 per month)</p> -->
@@ -82,7 +93,7 @@
                     <div class="text-center">
                         <p class="text-base sm:text-lg text-start">large</p>
                         <p>
-                            <span class="text-5xl font-bold">$70</span>
+                            <span class="text-5xl font-bold">$69</span>
                         </p>
                         <p class="text-base sm:text-lg my-2">Up to 2400 queries</p>
                         <!-- <p class="text-base sm:text-lg mb-2">(~200 per month)</p> -->
@@ -113,13 +124,13 @@
         location.href = "/login";
     };
     document.getElementById("buySmallButton").onclick = function () {
-        location.href = "/login";
+        location.href = "/login?cp=plan-s";
     };
     document.getElementById("buyMediumButton").onclick = function () {
-        location.href = "/login";
+        location.href = "/login?cp=plan-m";
     };
     document.getElementById("buyLargeButton").onclick = function () {
-        location.href = "/login";
+        location.href = "/login?cp=plan-l";
     };
 </script>
 

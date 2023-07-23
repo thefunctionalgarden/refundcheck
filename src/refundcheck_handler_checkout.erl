@@ -76,24 +76,30 @@ from_json(Req0, State) ->
     Path = cowboy_req:path(Req0),
     {ok, OrgBodyEnc, Req1} = cowboy_req:read_body(Req0),
     CheckoutBody = jsx:decode(OrgBodyEnc, [return_maps, {labels, atom}]),
-
     io:format("~p:~p CheckoutBody:~p ~n", [?MODULE, ?LINE, CheckoutBody]),
+
+    UserAPIKey = refundcheck_handler_helper:get_api_key(Req0),
+    Seller = refundcheck:getSeller(UserAPIKey),
 
     {_RespCode, HTTPRespCode, _H, RespBody} = case Path of
         ?CREATE_ORDER_PATH ->
             SKU = maps:get(sku, CheckoutBody),
-            OrderAmount = refundcheck:getPlanAmount(SKU),
+            #{amount := OrderAmount} = refundcheck:getPlan(SKU),
 
             CreateOrderResp = create_order(OrderAmount),
+            {_, _, _, CreateOrderData} = CreateOrderResp,
+            refundcheck:payment_start(Seller, SKU, OrderAmount, CreateOrderData),
             CreateOrderResp;
 
         ?CAPTURE_ORDER_PATH ->
             OrderId = maps:get(orderID, CheckoutBody),
-            PaymentDetails = capture_payment(OrderId),
-            PaymentDetails
+            CapturePaymentResp = capture_payment(OrderId),
+            {_, _, _, PaymentData} = CapturePaymentResp,
+            refundcheck:payment_complete(Seller, PaymentData),
+            CapturePaymentResp
     end,
 
-    io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
+    % io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
     
     RespBodyEnc = jsx:encode(RespBody),
     % ReqN = cowboy_req:set_resp_body(RespBodyEnc, Req1),
@@ -105,6 +111,19 @@ from_json(Req0, State) ->
     ),
     {stop, ReqN, State}.  %%  {Result, Req, State}
     
+
+% navigateToConsole(SellerKey, Req) ->
+%     LandingURI = refundcheck_handler_helper:build_landing_url(SellerKey),
+%     ReqN = cowboy_req:reply(
+%         303,   %308, %304, %300, %302, %301, %307, %303,
+%         #{
+%             <<"location">> => LandingURI  % to the console
+%             % <<"authorization">> => <<"Bearer ", SellerKey/bitstring>>
+%             % <<"sellersguard-key">> => SellerKey
+%         },
+%         Req
+%     ),
+%     ReqN.
 
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -193,5 +212,5 @@ capture_payment(OrderId) when is_bitstring(OrderId) ->
 
 
 
-%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

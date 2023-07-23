@@ -96,22 +96,10 @@ reply(Req0, <<"public/404.html">>) ->
     ),
     ReqN;
 reply(Req0, <<"public/console.html">> = FileName) ->
-    ReqN = case file:read_file(FileName) of
-        {ok, Html} ->
-            HtmlToSend = add_scripts(Req0, console, Html),
-            Req1 = cowboy_req:set_resp_body(HtmlToSend, Req0),
-            cowboy_req:reply(
-                200,
-                #{ <<"content-type">> => <<"text/html">> },
-                Req1
-            );
-        _Other ->
-            cowboy_req:reply(
-                400,
-                #{ <<"content-type">> => <<"text/html">> },
-                Req0
-            )
-    end,
+    ReqN = add_scripts_and_reply(Req0, FileName),
+    ReqN;
+reply(Req0, <<"public/checkout.html">> = FileName) ->
+    ReqN = add_scripts_and_reply(Req0, FileName),
     ReqN;
 reply(Req0, Filename) ->
     {ok, #file_info{size = Size}} = file:read_file_info(Filename),
@@ -125,7 +113,29 @@ reply(Req0, Filename) ->
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
-add_scripts(Req, console, Html) ->
+
+add_scripts_and_reply(Req0, FileName) ->
+    ReqN = case file:read_file(FileName) of
+        {ok, Html} ->
+            HtmlToSend = add_scripts(Req0, FileName, Html),
+            Req1 = cowboy_req:set_resp_body(HtmlToSend, Req0),
+            cowboy_req:reply(
+                200,
+                #{ <<"content-type">> => <<"text/html">> },
+                Req1
+            );
+        _Other ->
+            cowboy_req:reply(
+                400,
+                #{ <<"content-type">> => <<"text/html">> },
+                Req0
+            )
+    end,
+    ReqN.
+
+
+
+add_scripts(Req, <<"public/checkout.html">>, Html) ->
     #{
         user_key := UserAPIKey
     } = cowboy_req:match_qs([user_key], Req),
@@ -134,24 +144,77 @@ add_scripts(Req, console, Html) ->
         <<"mail">> := SellerMail,
         <<"available_calls">> := SellerAvCalls
     } = refundcheck:getSeller(UserAPIKey),
+    CheckoutURL = build_console_url(UserAPIKey),
     Rep = <<"    <script>
         const seller_name = '~ts';
         const seller_mail = '~ts';
         const seller_available_calls = '~p';
         const seller_url = '';
         const seller_user_key = '~ts';
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('cp');
+        const consoleLink = '~ts';
         window.onload = function () {
             document.getElementById('seller_name').innerHTML = seller_name;
             document.getElementById('seller_mail').innerHTML = seller_mail;
             document.getElementById('seller_url').innerHTML = seller_url;
             document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
             document.getElementById('seller_user_key').innerHTML = seller_user_key;
+            document.getElementById(selectedPlan).checked = true;
+            document.getElementById('console_link').href = consoleLink;
         };
     </script>
 
 </html>">>,
-    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey]),
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, CheckoutURL]),
+    string:replace(Html, <<"</html>">>, Replacement, trailing);
+
+add_scripts(Req, <<"public/console.html">>, Html) ->
+    #{
+        user_key := UserAPIKey
+    } = cowboy_req:match_qs([user_key], Req),
+    #{
+        <<"name">> := SellerName,
+        <<"mail">> := SellerMail,
+        <<"available_calls">> := SellerAvCalls
+    } = refundcheck:getSeller(UserAPIKey),
+    CheckoutURL = build_checkout_url(UserAPIKey, "plan-m"),
+    Rep = <<"    <script>
+        const seller_name = '~ts';
+        const seller_mail = '~ts';
+        const seller_available_calls = '~p';
+        const seller_url = '';
+        const seller_user_key = '~ts';
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedPlan = urlParams.get('cp');
+        const checkoutLink = '~ts';
+        window.onload = function () {
+            document.getElementById('seller_name').innerHTML = seller_name;
+            document.getElementById('seller_mail').innerHTML = seller_mail;
+            document.getElementById('seller_url').innerHTML = seller_url;
+            document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
+            document.getElementById('seller_user_key').innerHTML = seller_user_key;
+            document.getElementById('checkout_link').href = checkoutLink;
+        };
+    </script>
+
+</html>">>,
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, CheckoutURL]),
     string:replace(Html, <<"</html>">>, Replacement, trailing).
+
+
+build_checkout_url(SellerKey, CheckoutPlanSize) ->
+    CheckoutRN = refundcheck_config:getURICheckout(),
+    Q1 = {"user_key", SellerKey},
+    Q2 = {"cp", CheckoutPlanSize},
+    CheckoutURL = restc:construct_url(<<"/">>, CheckoutRN, [Q1, Q2]),
+    CheckoutURL.
+
+build_console_url(SellerKey) ->
+    CheckoutRN = refundcheck_config:getURIConsole(),
+    Q1 = {"user_key", SellerKey},
+    CheckoutURL = restc:construct_url(<<"/">>, CheckoutRN, [Q1]),
+    CheckoutURL.
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 

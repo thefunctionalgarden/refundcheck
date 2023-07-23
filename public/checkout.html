@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>SellersGuard</title>
-    <meta name="description" content="Prevent refund abuse" />
+    <title>SellersGuard Checkout</title>
+    <meta name="description" content="SellersGuard - Checkout" />
     <meta charSet="utf-8" />
     <link rel="canonical" href="https://sellersguard.com" />
     <link href="css/sellersguard.css" rel="stylesheet">
@@ -32,35 +32,36 @@
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">hello, <span id="seller_name"></span></h1>
             <ul class="list-disc list-inside">
                 <p class="mb-2">mail: <span id="seller_mail"></span></p>
+                <p class="mb-2">API key: <span id="seller_user_key" class="font-mono text-sm"></span></p>
                 <p class="mb-2">url: <span id="seller_url"></span></p>
-                <p class="mb-2">available calls:  <span id="seller_available_calls"></span></p>
-                <p class="mb-2">API key: <span id="seller_user_key"></span></p>
+                <p class="mb-2">available queries:  <span id="seller_available_calls"></span></p>
+                <p><a id="console_link" class="my-4 font-bold underline hover:to-blue-900" href="/console">Back to Console</a></p>
             </ul>
         </section>
 
 
 
         <div id="checkout">
-            <div class="grid  sm:grid-cols-3 gap-4  mx-8 mt-6 mb-2">
+            <div class="grid  sm:grid-cols-3 gap-4  mx-8 mt-8 mb-2">
                 <input id="plan-s" type="radio" name="plan" value="plan-s01" class="hidden">
                 <label for="plan-s" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
                     <div>
                         <span class="text-base sm:text-base font-bold">small</span>
                         <span> </span>
-                        <span class="text-3xl font-bold">$15</span>
+                        <span class="text-3xl font-bold">$9</span>
                     </div>
                     <p class="text-base sm:text-base my-2">Up to 240 queries</p>
                 </label>
                 <input id="plan-m" type="radio" checked name="plan" value="plan-m01" class="hidden">
                 <label for="plan-m" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
                     <span class="text-base sm:text-base font-bold text-start">medium</span>
-                    <span class="text-3xl font-bold ">$30</span>
+                    <span class="text-3xl font-bold ">$19</span>
                     <p class="text-base sm:text-base my-1">Up to 600 queries</p>
                 </label>
                 <input id="plan-l" type="radio" name="plan" value="plan-l01" class="hidden">
                 <label for="plan-l" class="rounded-lg p-1 bg-white hover:bg-blue-100 border-4 border-dotted border-transparent">
                     <span class="text-base sm:text-base font-bold text-start">large</span>
-                    <span class="text-3xl font-bold">$70</span>
+                    <span class="text-3xl font-bold">$69</span>
                     <p class="text-base sm:text-base my-2">Up to 2400 queries</p>
                 </label>
             </div>
@@ -113,11 +114,12 @@
                         // Successful capture! For dev/demo purposes:
                         console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
                         const transaction = orderData.purchase_units[0].payments.captures[0];
-                        alert(`Transaction ${transaction.status}: ${transaction.id}\n\nSee console for all available details`);
+                        alert(`Transaction ${transaction.status}: ${transaction.id}\n`);
                         // When ready to go live, remove the alert and show a success message within this page. For example:
                         // const element = document.getElementById('paypal-button-container');
                         // element.innerHTML = '<h3>Thank you for your payment!</h3>';
                         // Or go to another URL:  window.location.href = 'thank_you.html';
+                        window.location.href = '/console';
                     });
             }
         }).render('#paypal-button-container');

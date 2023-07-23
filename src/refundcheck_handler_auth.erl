@@ -74,7 +74,11 @@ to_send(Req0, State) ->
     Path = cowboy_req:path(Req0),
     case Path of
         <<"/login">> ->
+            #{
+                cp := CheckoutPlanSize
+            } = cowboy_req:match_qs([{cp, [], <<"no-checkout">>}], Req0),
             LoginStateToken = refundcheck_config:newLoginToken(),
+            refundcheck_config:set_conf(LoginStateToken, CheckoutPlanSize),  % save the checkout plan selected in the landing page
             OAuthURL = build_oauth_url(LoginStateToken),
 
             ReqN = cowboy_req:reply(
@@ -101,7 +105,9 @@ to_send(Req0, State) ->
                     );
 
                 true ->
-                    refundcheck_config:removeLoginToken(LoginTokenCallback),
+                    CheckoutPlanSize = refundcheck_config:get_conf(LoginTokenCallback),  % get saved checkout plan
+                    refundcheck_config:delete_conf(LoginTokenCallback),  % and remove it
+                    refundcheck_config:removeLoginToken(LoginTokenCallback),  % also remove the login token
                     OAuthData = get_access_token(Code),
                     PeopleData = getPeopleData(maps:get(access_token, OAuthData)),
                     io:format("~p:~p PeopleData:~p ~n", [?MODULE, ?LINE, PeopleData]),
@@ -110,11 +116,11 @@ to_send(Req0, State) ->
                     SellerData = refundcheck:login(PeopleData),
                     SellerKey  = maps:get(seller_key, SellerData),
 
-                    ConsoleURI = build_console_url(SellerKey),
+                    LandingURI = refundcheck_handler_helper:build_landing_url(SellerKey, CheckoutPlanSize),
                     ReqN = cowboy_req:reply(
                         303,   %308, %304, %300, %302, %301, %307, %303,
                         #{
-                            <<"location">> => ConsoleURI % to the console
+                            <<"location">> => LandingURI  % to the console, or to the checkout
                             % <<"authorization">> => <<"Bearer ", SellerKey/bitstring>>
                             % <<"sellersguard-key">> => SellerKey
                         },
@@ -148,14 +154,6 @@ to_send(Req0, State) ->
 %     ok.
 
 
-build_console_url(SellerKey) ->
-    ConsoleRN = refundcheck_config:getURIConsole(),
-    Q1 = {"user_key", SellerKey},
-    ConsoleURL = restc:construct_url(<<"/">>, ConsoleRN, [Q1]),
-    ConsoleURL.
-
-
-
 build_oauth_url(StateToken) ->
     io:format("~p:~p ~n", [?MODULE, ?LINE]),
 
@@ -173,9 +171,6 @@ build_oauth_url(StateToken) ->
     % Q9 = {"prompt",},
  
     OAuthURL = restc:construct_url(OAuth2Endpoint, OAuth2RN, [Q1, Q2, Q3, Q4, Q5, Q6, Q7]),
- 
-    io:format("~p:~p OAuthURL:~p ~n", [?MODULE, ?LINE, OAuthURL]),
-
     OAuthURL.
 
 
@@ -195,7 +190,6 @@ get_access_token(Code) ->
     Q5 = {"redirect_uri", refundcheck_config:getAuthRedirectURILoginCallback()},
 
     TokenURL = restc:construct_url(OAuth2TokenEndpoint, OAuth2TokenRN, [Q1, Q2, Q3, Q4, Q5]),
-    io:format("~p:~p TokenURL:~p ~n", [?MODULE, ?LINE, TokenURL]),
     OAuthData = case restc:request(post, percent, TokenURL, []) of
         {ok, 200, _H, RespBody} ->
             io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),

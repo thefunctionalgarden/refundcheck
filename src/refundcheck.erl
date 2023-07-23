@@ -10,7 +10,10 @@
     isValidUserAPIKey/1,
     getSeller/1,
     getSellersMails/0,
-    getPlanAmount/1,
+
+    getPlan/1,
+    payment_start/4,
+    payment_complete/2,
 
     getColValues/2,
     registerPurchase/2,
@@ -19,7 +22,6 @@
     getCustomerHistoryGlobal/1
 ]).
 
--compile([export_all]).
 
 -define(KEY_SIZE, 40).
 
@@ -93,12 +95,56 @@ getSellersMails() ->
     }.
 
 
-getPlanAmount(<<"plan-s01">>) ->
-    15;
-getPlanAmount(<<"plan-m01">>) ->
-    30;
-getPlanAmount(<<"plan-l01">>) ->
-    70.
+getPlan(<<"plan-s01">>) ->
+    #{
+        amount => 9,
+        calls  => 240
+    };
+getPlan(<<"plan-m01">>) ->
+    #{
+        amount => 19,
+        calls  => 600
+    };
+getPlan(<<"plan-l01">>) ->
+    #{
+        amount => 69,
+        calls  => 2400
+    }.
+
+
+%% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+
+
+
+payment_start(Seller, SKU, Amount, Data) ->
+    #{<<"id">> := SellerId} = Seller,
+    #{
+        <<"status">> := Status,
+        <<"id">> := TrxId
+    } = Data,
+    Conn = getConnection(),
+    insertPayment(Conn, SellerId, Amount, SKU, 1, Data, TrxId, Status),
+    closeConnection(Conn).
+
+
+payment_complete(Seller, Data) ->
+    #{
+        <<"available_calls">> := SellerAvailCalls
+    } = Seller,
+    #{
+        <<"status">> := Status,
+        <<"id">> := TrxId
+    } = Data,
+    Conn = getConnection(),
+    updatePayment(Conn, Data, TrxId, Status),
+    #{<<"concept">> := SKU} = selectPayment(Conn, TrxId),
+    #{calls := AdditionalCalls} = getPlan(SKU),
+    UpdSeller = Seller#{
+        <<"available_calls">> => SellerAvailCalls + AdditionalCalls
+    },
+    updateSeller(Conn, UpdSeller),
+    closeConnection(Conn).
+
 
 %% -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 
@@ -287,7 +333,7 @@ selectSellers(Conn) ->
 
 selectSeller(Conn, SellerId) ->
     RS = epgsql:equery(Conn,
-        "SELECT mail, name, key, available_calls
+        "SELECT *
         FROM refundcheck.seller s
         WHERE s.id = $1",
         [SellerId]
@@ -297,7 +343,7 @@ selectSeller(Conn, SellerId) ->
 
 selectSellerByKey(Conn, SellerKey) ->
     RS = epgsql:equery(Conn,
-        "SELECT id, mail, name, available_calls
+        "SELECT *
         FROM refundcheck.seller s
         WHERE s.key = $1",
         [SellerKey]
@@ -307,6 +353,57 @@ selectSellerByKey(Conn, SellerKey) ->
         [R1] -> R1
     end,
     R.
+
+
+updateSeller(Conn, NewSeller) ->
+    #{
+        <<"id">> := SellerId,
+        <<"name">> := SellerName,
+        <<"mail">> := SellerMail,
+        <<"key">> := SellerKey,
+        <<"key_expires_in">> := SellerKeyExipresIn,
+        <<"available_calls">> := SellerAvailCalls,
+        <<"url">> := SellerURL
+    } = NewSeller,
+    epgsql:equery(Conn,
+        "UPDATE refundcheck.seller
+	        SET name=$1, mail=$2, key=$3, key_expires_in=$4, available_calls=$5, url=$6
+	        WHERE id = $7",
+        [SellerName, SellerMail, SellerKey, SellerKeyExipresIn, SellerAvailCalls, SellerURL, SellerId]
+    ).
+
+
+
+
+insertPayment(Conn, SellerId, Amount, Concept, Items, Data, TrxId, Status) ->
+    DataStr = jsx:encode(Data),
+    epgsql:equery(Conn,
+        "INSERT INTO refundcheck.payment (
+            seller_id, amount, concept, items, data, trx_id, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)",
+        [SellerId, Amount, Concept, Items, DataStr, TrxId, Status]
+    ).
+
+updatePayment(Conn, Data, TrxId, Status) ->
+    DataStr = jsx:encode(Data),
+    epgsql:equery(Conn,
+        "UPDATE refundcheck.payment
+	        SET data = $1, status = $2
+	        WHERE trx_id = $3",
+        [DataStr, Status, TrxId]
+    ).
+
+selectPayment(Conn, TrxId) ->
+    RS = epgsql:equery(Conn,
+        "SELECT date, seller_id, amount, concept, items, best_before, data, trx_id, status
+        FROM refundcheck.payment
+        WHERE trx_id = $1",
+        [TrxId]
+    ),
+    [R] = parse_result(RS),
+    R.
+    
+
 
 
 selectCustomerIds(Conn, CustomerMail) ->

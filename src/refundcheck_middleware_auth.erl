@@ -28,6 +28,9 @@ execute(Req, Env) ->
         <<"/login_callback">> ->  % open for login
             {ok, Req, Env};
 
+        <<"/privacy.html">> ->  % open for the privacy statement
+            {ok, Req, Env};
+
         <<"/healthcheck">> ->  % open for healthcheck
             {ok, Req, Env};
 

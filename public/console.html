@@ -1,14 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>SellersGuard</title>
-    <meta name="description" content="Prevent refund abuse" />
+    <title>SellersGuard Console</title>
+    <meta name="description" content="SellersGuard - User console" />
     <meta charSet="utf-8" />
     <link rel="canonical" href="https://sellersguard.com" />
     <link href="css/sellersguard.css" rel="stylesheet">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EXG537G2L2"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-EXG537G2L2');
+</script>
 
 <header class="fixed top-0 left-0 right-0 bg-gray-200 text-gray-900  py-3 sm:py-5  px-2 sm:px-8  flex items-center justify-between rounded-lg">
     <div>
@@ -32,24 +42,23 @@
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">hello, <span id="seller_name"></span></h1>
             <ul class="list-disc list-inside">
                 <p class="mb-2">mail: <span id="seller_mail"></span></p>
+                <p class="mb-2">API key: <span id="seller_user_key" class="font-mono text-sm"></span></p>
                 <p class="mb-2">url: <span id="seller_url"></span></p>
-                <p class="mb-2">available calls:  <span id="seller_available_calls"></span></p>
-                <p class="mb-2">API key: <span id="seller_user_key"></span></p>
+                <p class="mb-2">available queries:  <span id="seller_available_calls"></span> <span class="text-sm">Need more? Proceed to </span> <a id="checkout_link" class="text-sm underline hover:to-blue-900" href="/checkout">checkout</a> </p>
             </ul>
         </section>
 
-
-        <section id="documentation" class="mt-4">
+        <section id="documentation" class="mt-4"></section>
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Documentation</h1>
             <ul class="list-disc list-inside">
                 <p class="mb-6">Please check the <a class="underline hover:to-blue-900" href="/api-docs">SellersGuard API specification</a>.</p>
             </ul>
         </section>
-
+    
         <section id="welcome" class="mt-4">
             <h1 class="mb-2 mt-10 font-bold text-xl sm:text-2xl">Thanks for your interest</h1>
             <ul class="list-disc list-inside">
-                <p class="mb-6">We're launching soon!  We'll let you know when the service is available.</p>
+                <p class="mb-6">You have some calls available to try the service.</p>
             </ul>
         </section>
 
