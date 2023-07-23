@@ -192,7 +192,7 @@ get_access_token(Code) ->
     TokenURL = restc:construct_url(OAuth2TokenEndpoint, OAuth2TokenRN, [Q1, Q2, Q3, Q4, Q5]),
     OAuthData = case restc:request(post, percent, TokenURL, []) of
         {ok, 200, _H, RespBody} ->
-            io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
+            % io:format("~p:~p RespBody:~p ~n", [?MODULE, ?LINE, RespBody]),
             % {
             %     "access_token": "1/fFAGRNJru1FTz70BzhT3Zg",
             %     "expires_in": 3920,
