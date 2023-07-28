@@ -22,6 +22,9 @@ execute(Req, Env) ->
         <<"/favicon.ico">> ->  % open for favicon.ico
             {ok, Req, Env};
 
+        <<"/copy02.png">> ->  % open for copy.svg
+            {ok, Req, Env};
+
         <<"/login">> ->  % open for login
             {ok, Req, Env};
 

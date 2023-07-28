@@ -76,6 +76,7 @@ to_send(Req0, State) ->
         <<"/privacy.html">> -> <<"public/privacy.html">>;
         <<"/console">>      -> <<"public/console.html">>;
         <<"/checkout">>     -> <<"public/checkout.html">>;
+        <<"/copy02.png">>     -> <<"public/copy02.png">>;
         _OtherPath          -> <<"public/404.html">>
     end,
     
@@ -102,11 +103,18 @@ reply(Req0, <<"public/checkout.html">> = FileName) ->
     ReqN = add_scripts_and_reply(Req0, FileName),
     ReqN;
 reply(Req0, Filename) ->
+    ContentType = case string:take(Filename, ".", true, trailing) of
+        {_, <<"html">>} -> <<"text/html">>;
+        {_, <<"svg">>} -> <<"image/svg+xml">>;
+        {_, <<"png">>} -> <<"image/png">>
+    end,
+    io:format("~p:~p - ContentType: ~p~n", [?MODULE, ?LINE, ContentType]),
     {ok, #file_info{size = Size}} = file:read_file_info(Filename),
+    io:format("~p:~p - Size: ~p~n", [?MODULE, ?LINE, Size]),
     Req1 = cowboy_req:set_resp_body({sendfile, 0, Size, Filename}, Req0),
     ReqN = cowboy_req:reply(
         200,
-        #{ <<"content-type">> => <<"text/html">> },
+        #{ <<"content-type">> => ContentType },
         Req1
     ),
     ReqN.
@@ -144,13 +152,14 @@ add_scripts(Req, <<"public/checkout.html">>, Html) ->
         <<"mail">> := SellerMail,
         <<"available_calls">> := SellerAvCalls
     } = refundcheck:getSeller(UserAPIKey),
-    CheckoutURL = build_console_url(UserAPIKey),
+    URL = build_console_url(UserAPIKey),
     Rep = <<"    <script>
         const seller_name = '~ts';
         const seller_mail = '~ts';
         const seller_available_calls = '~p';
         const seller_url = '';
         const seller_user_key = '~ts';
+        const seller_user_key_to_show = '~ts';
         const urlParams = new URLSearchParams(window.location.search);
         const selectedPlan = urlParams.get('cp');
         const consoleLink = '~ts';
@@ -159,15 +168,17 @@ add_scripts(Req, <<"public/checkout.html">>, Html) ->
             document.getElementById('seller_mail').innerHTML = seller_mail;
             document.getElementById('seller_url').innerHTML = seller_url;
             document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
-            document.getElementById('seller_user_key').innerHTML = seller_user_key;
+            document.getElementById('seller_user_key').innerHTML = seller_user_key_to_show;
             document.getElementById(selectedPlan).checked = true;
             document.getElementById('console_link').href = consoleLink;
         };
     </script>
 
-</html>">>,
-    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, CheckoutURL]),
-    string:replace(Html, <<"</html>">>, Replacement, trailing);
+</head>">>,
+    UserAPIKeyPart = string:slice(UserAPIKey, 0, 16),
+    UserAPIKeyToShow = <<UserAPIKeyPart/bitstring, "...">>,
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, UserAPIKeyToShow, URL]),
+    string:replace(Html, <<"</head>">>, Replacement);
 
 add_scripts(Req, <<"public/console.html">>, Html) ->
     #{
@@ -178,13 +189,14 @@ add_scripts(Req, <<"public/console.html">>, Html) ->
         <<"mail">> := SellerMail,
         <<"available_calls">> := SellerAvCalls
     } = refundcheck:getSeller(UserAPIKey),
-    CheckoutURL = build_checkout_url(UserAPIKey, "plan-m"),
+    URL = build_checkout_url(UserAPIKey, "plan-m"),
     Rep = <<"    <script>
         const seller_name = '~ts';
         const seller_mail = '~ts';
         const seller_available_calls = '~p';
         const seller_url = '';
         const seller_user_key = '~ts';
+        const seller_user_key_to_show = '~ts';
         const urlParams = new URLSearchParams(window.location.search);
         const selectedPlan = urlParams.get('cp');
         const checkoutLink = '~ts';
@@ -193,14 +205,19 @@ add_scripts(Req, <<"public/console.html">>, Html) ->
             document.getElementById('seller_mail').innerHTML = seller_mail;
             document.getElementById('seller_url').innerHTML = seller_url;
             document.getElementById('seller_available_calls').innerHTML = seller_available_calls;
-            document.getElementById('seller_user_key').innerHTML = seller_user_key;
+            document.getElementById('seller_user_key').innerHTML = seller_user_key_to_show;
             document.getElementById('checkout_link').href = checkoutLink;
         };
+        function copyUserKey() {
+            navigator.clipboard.writeText(seller_user_key);
+        }
     </script>
 
-</html>">>,
-    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, CheckoutURL]),
-    string:replace(Html, <<"</html>">>, Replacement, trailing).
+</head>">>,
+    UserAPIKeyPart = string:slice(UserAPIKey, 0, 16),
+    UserAPIKeyToShow = <<UserAPIKeyPart/bitstring, "...">>,
+    Replacement = io_lib:format(Rep, [SellerName, SellerMail, SellerAvCalls, UserAPIKey, UserAPIKeyToShow, URL]),
+    string:replace(Html, <<"</head>">>, Replacement, trailing).
 
 
 build_checkout_url(SellerKey, CheckoutPlanSize) ->

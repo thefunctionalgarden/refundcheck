@@ -29,3 +29,11 @@ input:checked+label {
     background-color: rgb(219 234 254);
     border-color: rgb(191 219 254);
 }
+
+img {
+    display: block
+}
+
+copybutton:active {
+    transform: translateY(2px);
+}
